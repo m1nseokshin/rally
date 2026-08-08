@@ -63,67 +63,79 @@ function seededPoints(seed: string, count: number) {
   return points.sort((a, b) => a - b);
 }
 
-function difficultyFrom(tempo: number, energy: number) {
-  const score = tempo / 40 + energy * 2.2;
-  return Math.min(5, Math.max(1, Math.round(score)));
+/** 트랙 id를 안정적인 32bit 해시로 — 같은 곡이면 언제나 같은 값이 나온다 */
+function hashId(seed: string) {
+  let h = 2166136261 >>> 0;
+  for (const ch of seed) {
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h;
 }
 
 /**
- * 오디오 특성(BPM 등)까지 붙여 우리 Track 형태로 변환.
- * /audio-features는 2024년 11월 이후 신규 앱엔 403으로 막혀 있을 수 있어
- * 실패해도 트랙 자체는 보여주고 "분석 대기 중" 상태로 표시한다.
+ * 곡마다 다른 템포를 만들어 낸다.
+ *
+ * 중요: 이건 실제 분석값이 아니라 **추정치**다. Spotify가 2024년 11월부터
+ * 신규 앱에 /audio-features(실제 BPM)를 403으로 막아서 진짜 템포를 받을
+ * 방법이 없다. 그렇다고 전부 110 BPM으로 고정하면 어떤 곡을 골라도 똑같은
+ * 게임이 되니, 곡 id에서 결정적으로 뽑아 88~168 사이 값을 준다 —
+ * 같은 곡은 항상 같은 템포이고, 곡마다는 확실히 다르다.
+ * UI에서도 "추정"이라고 분명히 표시한다.
  */
-async function toTrack(t: SpotifyApiTrack): Promise<Track> {
-  const base: Track = {
+function estimateTempo(id: string) {
+  return 88 + (hashId(id) % 81); // 88~168
+}
+
+function difficultyFrom(tempo: number) {
+  // 88 → 1, 168 → 5
+  return Math.min(5, Math.max(1, Math.round((tempo - 78) / 20)));
+}
+
+/**
+ * Spotify 트랙 → 우리 Track 형태로 변환. **네트워크 호출이 없다.**
+ *
+ * 예전엔 곡마다 /audio-features를 한 번씩 더 불렀는데, 그 엔드포인트가
+ * 신규 앱엔 403이라 검색 한 번에 15개의 실패 요청이 나갔다. 그 15배 트래픽이
+ * Spotify 레이트 리밋(429)을 때려서 정작 /search까지 같이 죽는 게
+ * "검색 결과가 안 뜨는" 진짜 원인이었다. 호출을 아예 없앴다.
+ */
+function toTrack(t: SpotifyApiTrack): Track {
+  const bpm = estimateTempo(t.id);
+  const difficulty = difficultyFrom(bpm);
+  return {
     id: t.id,
     title: t.name,
     artist: t.artists.map((a) => a.name).join(", "),
     provider: "spotify",
     duration: Math.round(t.duration_ms / 1000),
-    bpm: 0,
+    bpm,
+    // 실제 오디오 분석이 아니라 추정 — UI가 이 값으로 문구를 가른다
     analyzed: false,
-    difficulty: 0,
-    hits: [],
+    difficulty,
+    hits: seededPoints(t.id, 6 + difficulty * 2),
     cover: ["#f24822", "#ffb199"],
     image: t.album.images[0]?.url,
     previewUrl: t.preview_url ?? undefined,
   };
-
-  try {
-    const features = await spotifyFetch(`/audio-features/${t.id}`);
-    const tempo = Math.round(features.tempo);
-    const difficulty = difficultyFrom(tempo, features.energy ?? 0.5);
-    return {
-      ...base,
-      bpm: tempo,
-      analyzed: true,
-      difficulty,
-      hits: seededPoints(t.id, 6 + difficulty * 2),
-    };
-  } catch {
-    // audio-features 접근 불가 — 목록엔 노출하되 분석은 대기 상태로 둔다
-    return base;
-  }
 }
 
 export async function fetchTopTracks(limit = 20): Promise<Track[]> {
   const data = await spotifyFetch(`/me/top/tracks?limit=${limit}&time_range=short_term`);
-  const items: SpotifyApiTrack[] = data.items;
+  const items: SpotifyApiTrack[] = data.items ?? [];
   if (items.length === 0) {
     // 최근 청취 이력이 없으면 저장한 곡으로 폴백
     const saved = await spotifyFetch(`/me/tracks?limit=${limit}`);
-    return Promise.all(
-      saved.items.map((it: { track: SpotifyApiTrack }) => toTrack(it.track)),
-    );
+    return (saved.items ?? []).map((it: { track: SpotifyApiTrack }) => toTrack(it.track));
   }
-  return Promise.all(items.map(toTrack));
+  return items.map(toTrack);
 }
 
-/** 곡 제목/아티스트로 검색해 직접 지정할 수 있게 한다 */
-export async function searchTracks(query: string, limit = 15): Promise<Track[]> {
+/** 곡 제목/아티스트로 검색해 직접 지정할 수 있게 한다 — 요청 한 번이면 끝난다 */
+export async function searchTracks(query: string, limit = 20): Promise<Track[]> {
   const q = query.trim();
   if (!q) return [];
   const data = await spotifyFetch(`/search?type=track&limit=${limit}&q=${encodeURIComponent(q)}`);
   const items: SpotifyApiTrack[] = data.tracks?.items ?? [];
-  return Promise.all(items.map(toTrack));
+  return items.map(toTrack);
 }

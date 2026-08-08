@@ -149,19 +149,14 @@ export default function PlayPage() {
                   <span className="block truncate text-[13px] text-mute">
                     {track.artist} · {formatDuration(track.duration)}
                   </span>
+                  {/* 이제 모든 곡이 템포/난이도를 갖는다(실측이 막혀 추정값이지만) —
+                      난이도 막대는 항상 보여주고, 추정이라는 사실만 라벨로 붙인다 */}
                   <span className="mt-2 flex items-center gap-2">
-                    {track.analyzed ? (
-                      <>
-                        <Difficulty level={track.difficulty} />
-                        <span className="text-[11px] font-medium text-stone">
-                          {track.bpm} BPM
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-[11px] font-medium text-stone">
-                        {t("play.track.noAnalysis")}
-                      </span>
-                    )}
+                    <Difficulty level={track.difficulty} />
+                    <span className="text-[11px] font-medium text-stone">
+                      {track.bpm} BPM
+                      {!track.analyzed && ` · ${t("play.track.noAnalysis")}`}
+                    </span>
                   </span>
                 </span>
                 {favorites.has(track.id) && (
@@ -189,57 +184,52 @@ export default function PlayPage() {
           {/* 항상 어두운 분석 패널 — 다크모드 토큰과 무관하게 리터럴 black/white */}
           <div className="bg-black p-5" style={{ borderRadius: "var(--radius-panel)" }}>
             <p className="type-eyebrow text-[12px] font-medium uppercase text-primary">
-              {display.analyzed
-                ? t("play.analysis.rallyPoints", { count: display.hits.length })
-                : t("play.analysis.defaultRhythm")}
+              {t("play.analysis.rallyPoints", { count: display.hits.length })}
             </p>
             <h3 className="type-display mt-2 text-[30px] text-white">{display.title}</h3>
 
-            {display.analyzed ? (
-              <>
-                {/* 파형 + 히트 마커 */}
-                <div className="relative mt-6 h-24">
-                  <div className="flex h-full items-center gap-[2px]">
-                    {Array.from({ length: 46 }, (_, i) => {
-                      const pos = i / 45;
-                      const near = display.hits.some((h) => Math.abs(h - pos) < 0.018);
-                      const height = near ? 100 : 22 + Math.abs(Math.sin(i * 1.7)) * 42;
-                      return (
-                        <span
-                          key={i}
-                          className={`flex-1 rounded-full ${near ? "bg-primary" : "bg-white/25"}`}
-                          style={{ height: `${height}%` }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
+            {/* 파형 + 히트 마커 — 이제 모든 곡이 랠리 포인트를 갖는다 */}
+            <div className="relative mt-6 h-24">
+              <div className="flex h-full items-center gap-[2px]">
+                {Array.from({ length: 46 }, (_, i) => {
+                  const pos = i / 45;
+                  const near = display.hits.some((h) => Math.abs(h - pos) < 0.018);
+                  const height = near ? 100 : 22 + Math.abs(Math.sin(i * 1.7)) * 42;
+                  return (
+                    <span
+                      key={i}
+                      className={`flex-1 rounded-full ${near ? "bg-primary" : "bg-white/25"}`}
+                      style={{ height: `${height}%` }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
 
-                <div className="mt-5 grid grid-cols-3 gap-3 border-t border-white/15 pt-4">
-                  <Metric label={t("play.metric.bpm")} value={String(display.bpm)} />
-                  <Metric
-                    label={t("play.metric.difficulty")}
-                    value={`${display.difficulty} / 5`}
-                  />
-                  <Metric
-                    label={t("play.metric.length")}
-                    value={formatDuration(display.duration)}
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="type-caption mt-3 text-[13px] leading-relaxed text-white/50">
-                  {t("play.analysis.noAnalysisDesc")}
-                </p>
-                <div className="mt-5 grid grid-cols-2 gap-3 border-t border-white/15 pt-4">
-                  <Metric label={t("play.metric.bpm")} value={t("play.metric.bpmDefault")} />
-                  <Metric
-                    label={t("play.metric.length")}
-                    value={formatDuration(display.duration)}
-                  />
-                </div>
-              </>
+            <div className="mt-5 grid grid-cols-3 gap-3 border-t border-white/15 pt-4">
+              <Metric
+                label={t("play.metric.bpm")}
+                value={
+                  display.analyzed
+                    ? String(display.bpm)
+                    : `${display.bpm} · ${t("play.metric.bpmDefault")}`
+                }
+              />
+              <Metric
+                label={t("play.metric.difficulty")}
+                value={`${display.difficulty} / 5`}
+              />
+              <Metric
+                label={t("play.metric.length")}
+                value={formatDuration(display.duration)}
+              />
+            </div>
+
+            {/* 실측이 아니라 추정이라는 사실을 숨기지 않는다 */}
+            {!display.analyzed && (
+              <p className="type-caption mt-4 text-[12px] leading-relaxed text-white/40">
+                {t("play.analysis.noAnalysisDesc")}
+              </p>
             )}
           </div>
         </section>

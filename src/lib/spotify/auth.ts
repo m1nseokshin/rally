@@ -1,7 +1,7 @@
 "use client";
 
 import { generateCodeChallenge, generateCodeVerifier } from "./pkce";
-import { BASE_PATH } from "@/lib/basePath";
+import { BASE_PATH, TRAILING_SLASH } from "@/lib/basePath";
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID ?? "";
 const TOKEN_KEY = "rally_spotify_token";
@@ -35,7 +35,7 @@ function redirectUri() {
   // Spotify는 2025년부터 http://localhost 대신 http://127.0.0.1을 요구한다.
   // BASE_PATH — GitHub Pages(/rally 서브패스)에선 origin만으론 실제 콜백
   // 페이지 경로가 안 나온다(콜백 페이지 자체가 /rally/callback/spotify에 있다).
-  return `${window.location.origin}${BASE_PATH}/callback/spotify`;
+  return `${window.location.origin}${BASE_PATH}/callback/spotify${TRAILING_SLASH}`;
 }
 
 export function getStoredToken(): SpotifyToken | null {
