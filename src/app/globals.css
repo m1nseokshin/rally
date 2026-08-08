@@ -198,6 +198,54 @@ body {
   overflow: hidden;
 }
 
+/*
+  장르를 하나 고르면 나머지 칩들이 제자리에서 접혀 사라지고, 고른 것만
+  왼쪽에 남는다. 사라지는 게 아니라 "폭이 0으로 줄어드는" 것이라 남은 칩이
+  자연스럽게 왼쪽으로 미끄러진다. 다시 풀면 같은 곡선으로 도로 벌어진다.
+
+  DOM에서 빼지 않고 폭만 줄이는 이유 — 조건부 렌더는 사라질 때
+  애니메이션을 걸 수가 없다(이미 없어진 뒤라서).
+*/
+.chip-collapsible {
+  max-width: 240px;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width 620ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 380ms ease,
+    margin-right 620ms cubic-bezier(0.16, 1, 0.3, 1),
+    padding 620ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.chip-collapsible.collapsed {
+  max-width: 0;
+  opacity: 0;
+  /* flex gap까지 상쇄해야 완전히 자리를 비운다 */
+  margin-right: -0.5rem;
+  padding-left: 0;
+  padding-right: 0;
+  transform: scale(0.85);
+  pointer-events: none;
+}
+
+/* 선택된 칩 오른쪽에 붙는 ✕ — 선택될 때만 폭이 벌어지며 나타난다 */
+.chip-x {
+  display: inline-block;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  vertical-align: middle;
+  transition:
+    max-width 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 380ms ease,
+    margin-left 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.chip-x.show {
+  max-width: 1.4em;
+  opacity: 0.75;
+  margin-left: 0.4em;
+}
+
 /* 필터 결과가 갱신될 때 목록이 살짝 떠오르며 바뀐다 —
    "필터를 바꿨더니 다시 불러왔다"가 눈에 보여야 한다 */
 @keyframes results-in {

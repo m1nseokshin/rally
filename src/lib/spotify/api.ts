@@ -146,6 +146,18 @@ export async function fetchSavedTracks(limit = 50): Promise<Track[]> {
   return (data.items ?? []).map((it: { track: SpotifyApiTrack }) => toTrack(it.track));
 }
 
+/**
+ * id 목록으로 곡 정보를 한 번에 받아온다 — 즐겨찾기 구버전(id만 저장) 복구용.
+ * 한 요청에 50개가 상한이라 그 이상은 잘라 보낸다.
+ */
+export async function fetchTracksByIds(ids: string[]): Promise<Track[]> {
+  if (ids.length === 0) return [];
+  const data = await spotifyFetch(`/tracks?ids=${ids.slice(0, 50).join(",")}`);
+  return ((data.tracks ?? []) as (SpotifyApiTrack | null)[])
+    .filter((t): t is SpotifyApiTrack => t !== null)
+    .map(toTrack);
+}
+
 /** 최근 재생한 곡 — 같은 곡이 여러 번 들어오므로 id로 중복을 제거한다 */
 export async function fetchRecentTracks(limit = 50): Promise<Track[]> {
   const data = await spotifyFetch(`/me/player/recently-played?limit=${limit}`);

@@ -65,7 +65,17 @@ export default function PhoneFrame({
         className="origin-center"
         style={{ transform: "scale(var(--s, 1))" }}
       >
-        <div className="relative flex h-dvh w-screen flex-col overflow-hidden bg-canvas md:h-[874px] md:w-[402px] md:rounded-[54px] md:shadow-[0_0_0_11px_#111111,0_28px_60px_-12px_rgba(0,0,0,0.4)]">
+        {/*
+          transform을 걸어 이 div가 position:fixed 자식들의 컨테이닝 블록이 되게 한다.
+          이게 없으면 바텀시트(fixed inset-0)의 기준이 바깥 scaler가 돼서,
+          프레임의 overflow-hidden과 둥근 모서리를 무시하고 폰 화면 밖으로
+          삐져나온다. translateZ(0)은 렌더링 결과를 바꾸지 않으면서
+          컨테이닝 블록만 만들어 주는 표준 수법이다.
+        */}
+        <div
+          className="relative flex h-dvh w-screen flex-col overflow-hidden bg-canvas md:h-[874px] md:w-[402px] md:rounded-[54px] md:shadow-[0_0_0_11px_#111111,0_28px_60px_-12px_rgba(0,0,0,0.4)]"
+          style={{ transform: "translateZ(0)" }}
+        >
           <main className="rail flex-1 overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]">
             {children}
           </main>

@@ -24,6 +24,8 @@ export function useTrackSource(
   typed: string,
   enabled: boolean,
   shuffle: number,
+  /** 즐겨찾기는 로컬 저장소에 있으므로 호출부가 넘겨준다 — API를 부를 게 없다 */
+  favoriteTracks: Track[] = [],
 ) {
   const [raw, setRaw] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,8 +35,11 @@ export function useTrackSource(
   // 검색 쿼리는 텍스트/장르/연도/태그를 합친 결과다. 이게 바뀔 때만 다시 부른다.
   const query = buildSearchQuery(filters, typed);
   const { source } = filters;
+  const isFavorites = source === "favorites";
 
   useEffect(() => {
+    // 즐겨찾기는 네트워크를 타지 않는다 — 아래 파생값에서 바로 쓴다
+    if (isFavorites) return;
     const mySeq = ++seqRef.current;
     if (!enabled) {
       const id = setTimeout(() => {
@@ -102,8 +107,15 @@ export function useTrackSource(
     }, delay);
 
     return () => clearTimeout(id);
-  }, [enabled, source, query, typed, shuffle]);
+  }, [enabled, source, query, typed, shuffle, isFavorites]);
 
-  const tracks = applyClientFilters(raw, filters);
-  return { tracks, hiddenCount: raw.length - tracks.length, loading, error };
+  // 즐겨찾기는 로컬에 이미 다 있으니 요청 결과 대신 그걸 쓴다
+  const base = isFavorites ? favoriteTracks : raw;
+  const tracks = applyClientFilters(base, filters);
+  return {
+    tracks,
+    hiddenCount: base.length - tracks.length,
+    loading: isFavorites ? false : loading,
+    error: isFavorites ? null : error,
+  };
 }

@@ -21,6 +21,7 @@ export type TrackSource =
   | "top_long"
   | "saved"
   | "recent"
+  | "favorites"
   | "search";
 
 export type YearFilter = "all" | "new" | "2020s" | "2010s" | "2000s" | "1990s";
@@ -51,6 +52,7 @@ export const SOURCE_OPTIONS: { value: TrackSource; labelKey: DictKey }[] = [
   { value: "top_short", labelKey: "play.filter.source.topShort" },
   { value: "top_medium", labelKey: "play.filter.source.topMedium" },
   { value: "top_long", labelKey: "play.filter.source.topLong" },
+  { value: "favorites", labelKey: "play.filter.source.favorites" },
   { value: "saved", labelKey: "play.filter.source.saved" },
   { value: "recent", labelKey: "play.filter.source.recent" },
   { value: "search", labelKey: "play.filter.source.search" },
