@@ -14,6 +14,7 @@ import {
 } from "@/components/icons";
 import { useSpotify } from "@/lib/spotify/useSpotify";
 import { useSpotifySearch } from "@/lib/spotify/useSpotifySearch";
+import { MOODS } from "@/lib/spotify/moods";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useFavorites } from "@/lib/favorites/useFavorites";
 
@@ -24,7 +25,21 @@ export default function PlayPage() {
   const { t } = useLocale();
   const spotify = useSpotify();
   const [query, setQuery] = useState("");
-  const search = useSpotifySearch(query, spotify.connected);
+  // 선택한 장르(무드). null이면 내 취향(top tracks)을 보여준다.
+  const [moodId, setMoodId] = useState<string | null>(null);
+  // 같은 장르에서 다른 곡을 뽑기 위한 오프셋 — "다른 곡 보기"가 이걸 올린다
+  const [shuffle, setShuffle] = useState(0);
+
+  const typed = query.trim();
+  const mood = MOODS.find((m) => m.id === moodId) ?? null;
+  // 사용자가 직접 친 검색어가 항상 우선한다
+  const activeQuery = typed || mood?.query || "";
+  const search = useSpotifySearch(
+    activeQuery,
+    spotify.connected,
+    typed ? 0 : shuffle * 50,
+  );
+
   // id가 아니라 트랙 객체 자체를 들고 있는다 — 검색 결과에서 고른 곡은
   // top tracks 목록에 없어서, id로 목록을 다시 훑으면 선택이 사라진다.
   const [selected, setSelected] = useState<Track | null>(null);
@@ -32,7 +47,7 @@ export default function PlayPage() {
   const [previewTrack, setPreviewTrack] = useState<Track | null>(null);
   const { favorites, toggleFavorite } = useFavorites();
 
-  const searching = query.trim().length > 0;
+  const searching = activeQuery.length > 0;
   const list = searching ? search.results : spotify.connected ? spotify.tracks : [];
 
   // top tracks가 막 로드됐고 아직 아무것도 안 골랐으면 첫 곡을 기본값으로.
@@ -108,11 +123,50 @@ export default function PlayPage() {
         </section>
       )}
 
+      {/* 장르 칩 — 내 취향 목록 대신 장르로 골라볼 수 있다.
+          직접 검색어를 치면 그게 우선하므로 이때는 칩을 비활성으로 보여준다 */}
+      {spotify.connected && (
+        <section className="mt-4">
+          <div className="rail flex gap-2 overflow-x-auto px-6 pb-1">
+            <Chip active={!mood} disabled={!!typed} onClick={() => setMoodId(null)}>
+              {t("play.mood.mine")}
+            </Chip>
+            {MOODS.map((m) => (
+              <Chip
+                key={m.id}
+                active={mood?.id === m.id}
+                disabled={!!typed}
+                onClick={() => {
+                  setMoodId(m.id === moodId ? null : m.id);
+                  setShuffle(0);
+                }}
+              >
+                {t(m.labelKey)}
+              </Chip>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* 목록 라벨 */}
       {spotify.connected && !searching && list.length > 0 && (
         <p className="type-caption mt-6 px-6 text-[12px] font-medium text-mute">
           {t("play.list.aiLabel")}
         </p>
+      )}
+      {spotify.connected && mood && !typed && list.length > 0 && (
+        <div className="mt-6 flex items-baseline justify-between px-6">
+          <p className="type-caption text-[12px] font-medium text-mute">
+            {t("play.mood.label", { count: list.length })}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShuffle((s) => s + 1)}
+            className="tap text-[12px] font-medium text-primary underline underline-offset-4"
+          >
+            {t("play.mood.shuffle")}
+          </button>
+        </div>
       )}
 
       {/* 트랙 목록 */}
@@ -402,6 +456,33 @@ function TrackPreviewSheet({
         </div>
       </div>
     </div>
+  );
+}
+
+/** 장르 선택 칩 — 선택 시 완전 반전 */
+function Chip({
+  children,
+  active,
+  disabled,
+  onClick,
+}: {
+  children: React.ReactNode;
+  active: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={active}
+      className={`tap h-9 shrink-0 rounded-lg px-4 text-[13px] font-medium transition-colors disabled:opacity-40 ${
+        active ? "bg-ink text-canvas" : "border border-hairline bg-canvas text-ink"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 

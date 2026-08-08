@@ -120,7 +120,7 @@ function toTrack(t: SpotifyApiTrack): Track {
   };
 }
 
-export async function fetchTopTracks(limit = 20): Promise<Track[]> {
+export async function fetchTopTracks(limit = 50): Promise<Track[]> {
   const data = await spotifyFetch(`/me/top/tracks?limit=${limit}&time_range=short_term`);
   const items: SpotifyApiTrack[] = data.items ?? [];
   if (items.length === 0) {
@@ -131,11 +131,33 @@ export async function fetchTopTracks(limit = 20): Promise<Track[]> {
   return items.map(toTrack);
 }
 
-/** 곡 제목/아티스트로 검색해 직접 지정할 수 있게 한다 — 요청 한 번이면 끝난다 */
-export async function searchTracks(query: string, limit = 20): Promise<Track[]> {
+/** Spotify 검색 한 페이지 최대치. 이보다 크게 요청하면 400이 난다. */
+export const SEARCH_PAGE_MAX = 50;
+
+/**
+ * 곡 검색 — 요청 한 번이면 끝난다.
+ *
+ * query는 Spotify 검색 문법 그대로라 무드 프리셋의 `genre:"k-pop"` 같은
+ * 필터도 그대로 넘길 수 있다. offset은 같은 무드에서 매번 다른 곡을
+ * 뽑기 위한 것 — 안 그러면 새로고침해도 항상 같은 상위 50곡만 나온다.
+ */
+export async function searchTracks(
+  query: string,
+  limit = SEARCH_PAGE_MAX,
+  offset = 0,
+): Promise<Track[]> {
   const q = query.trim();
   if (!q) return [];
-  const data = await spotifyFetch(`/search?type=track&limit=${limit}&q=${encodeURIComponent(q)}`);
+  const capped = Math.min(limit, SEARCH_PAGE_MAX);
+  const data = await spotifyFetch(
+    `/search?type=track&limit=${capped}&offset=${offset}&q=${encodeURIComponent(q)}`,
+  );
   const items: SpotifyApiTrack[] = data.tracks?.items ?? [];
+
+  // offset이 결과 수를 넘어서면 빈 배열이 온다 — 그땐 처음부터 다시 받아
+  // "새로고침했더니 목록이 사라졌다"는 상황을 막는다.
+  if (items.length === 0 && offset > 0) {
+    return searchTracks(query, capped, 0);
+  }
   return items.map(toTrack);
 }

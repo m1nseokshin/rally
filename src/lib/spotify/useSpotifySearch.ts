@@ -4,8 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import type { Track } from "@/lib/data";
 import { searchTracks } from "./api";
 
-/** 입력 중 매 타이핑마다 요청하지 않도록 디바운스한 검색 */
-export function useSpotifySearch(query: string, enabled: boolean) {
+/**
+ * 디바운스한 곡 검색.
+ *
+ * query는 Spotify 검색 문법 그대로 들어가므로 사용자가 친 텍스트도,
+ * 무드 프리셋의 `genre:"k-pop"` 같은 필터도 같은 경로로 처리된다.
+ * offset은 같은 무드에서 다른 곡을 뽑는 "셔플"용이다.
+ */
+export function useSpotifySearch(query: string, enabled: boolean, offset = 0) {
   const [results, setResults] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +37,7 @@ export function useSpotifySearch(query: string, enabled: boolean) {
     const id = setTimeout(() => {
       if (seqRef.current !== mySeq) return;
       setLoading(true);
-      searchTracks(q)
+      searchTracks(q, undefined, offset)
         .then((tracks) => {
           // 응답이 늦게 와서 이미 다음 검색어로 넘어갔으면 버린다
           if (seqRef.current !== mySeq) return;
@@ -48,7 +54,7 @@ export function useSpotifySearch(query: string, enabled: boolean) {
     }, 300); // 300ms 디바운스 — 타이핑 도중엔 요청하지 않는다
 
     return () => clearTimeout(id);
-  }, [query, enabled]);
+  }, [query, enabled, offset]);
 
   return { results, loading, error };
 }
