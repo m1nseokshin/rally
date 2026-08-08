@@ -1,0 +1,260 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand */
+  --color-primary: #f24822;
+  --color-primary-deep: #c9330f;
+  --color-primary-soft: #ffe9e3;
+  --color-on-primary: #ffffff;
+
+  /* Neutrals — Nike system */
+  --color-canvas: #ffffff;
+  --color-cloud: #f5f5f5;
+  --color-ink: #111111;
+  --color-charcoal: #39393b;
+  --color-ash: #4b4b4d;
+  --color-mute: #707072;
+  --color-stone: #9e9ea0;
+  --color-hairline: #cacacb;
+  --color-hairline-soft: #e5e5e5;
+
+  /* Semantic */
+  --color-success: #007d48;
+  --color-success-bright: #1eaa52;
+  --color-info: #1151ff;
+
+  /* Radius — Rally 라운드 스케일. rounded-sm/md/lg/full로 사용.
+     15 → 뱃지·작은 칩, 20 → 카드성 컨테이너, 30 → 알약 CTA(시스템 표준). */
+  --radius-sm: 15px;
+  --radius-md: 20px;
+  --radius-lg: 30px;
+  /* Spotify 박스 레이아웃에서 스페이싱/구조만 차용 — 컬러는 손대지 않았다.
+     드롭다운·오버레이 패널 전용의 조밀한 라운드 단계. 기존 sm/md/lg(15/20/30)
+     알약 스케일은 그대로 두고, 이건 별도 성격의 패널용으로만 쓴다.
+     input(4) → 검색창 등 입력 필드, card(6) → 앨범아트·박스형 카드,
+     panel(8) → 섹션급 패널/다이얼로그/오버레이. Row 같은 엣지투엣지
+     리스트 행은 Nike 플랫 원칙 그대로 두고 대상에서 뺐다. */
+  --radius-input: 4px;
+  --radius-card: 6px;
+  --radius-panel: 8px;
+
+  /* Spotify의 다크 서피스 그림자 깊이(구조) — 밝기(rgba 불투명도)만 가져오고
+     색상 자체는 achromatic(검정)이라 브랜드 컬러와 무관하다.
+     0.3/8px = 카드 뜬 느낌, 0.5/24px = 다이얼로그/드롭다운급 강한 부상감. */
+  --shadow-card: 0 8px 8px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+:root {
+  color-scheme: light;
+}
+
+/* 다크모드 — Spotify 문서가 아니라 Rally 자체 팔레트를 반전한 값이다.
+   토큰(변수)만 여기서 덮어쓰면 bg-canvas/text-ink 등 기존 유틸리티가
+   컴포넌트 코드 수정 없이 전부 다크로 따라간다. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-canvas: #111111;
+  --color-cloud: #1c1c1c;
+  --color-ink: #f5f5f5;
+  --color-charcoal: #d8d8d8;
+  --color-ash: #b6b6b6;
+  --color-mute: #92928f;
+  --color-stone: #6b6b6b;
+  --color-hairline: #3a3a3a;
+  --color-hairline-soft: #262626;
+  --color-primary-soft: #3a1f16;
+  --color-success-bright: #2fc86a;
+}
+
+html,
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font-pretendard), "Apple SD Gothic Neo", "Helvetica Neue", Arial,
+    sans-serif;
+  /* 본문 기본 행간. Nike heading-md 등 UI 텍스트 기준 1.5 —
+     브라우저 기본값(normal ≈ 1.15)은 한글 2줄 이상에서 줄이 붙어 보인다. */
+  line-height: 1.5;
+  letter-spacing: 0;
+  /* 한글은 어절(단어) 단위로 줄바꿈 — 음절 중간에서 끊기지 않게.
+     URL처럼 진짜 끊을 수밖에 없는 긴 문자열만 예외로 강제 개행한다. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/*
+  자간/행간 보정 — Nike 타이포 스케일(display 96/0.9 · heading 24-32/1.2 ·
+  body 16/1.5 · caption 12-14/1.5)을 벤치마킹해 크기별로 다르게 튠.
+  큰 글자일수록 타이트하게, 작은 글자일수록 넓게 — 표준 옵티컬 보정 원칙.
+*/
+
+/* Display tier — Nike Futura 대체.
+   영문은 Bebas Neue(글리프 있음)로, 한글은 Bebas에 글리프가 없어
+   Pretendard 900(Black)으로 자동 폴백된다 — Nike의 굵고 좁은 헤드라인 느낌 유지.
+   @theme 토큰은 :root에 놓이는데 폰트 변수는 body에 붙어 상속되지 않는다.
+   그래서 여기서 직접 참조한다. */
+.type-display {
+  font-family:
+    var(--font-bebas), var(--font-pretendard), "Apple SD Gothic Neo", Arial, sans-serif;
+  font-weight: 900;
+  /* 0.9는 너무 붙어 보인다는 피드백 → 1.05도 아직 좁다는 후속 피드백 —
+     2줄 이상 제목에서 줄 사이 숨 쉴 틈을 더 준다 */
+  line-height: 1.2;
+  /* 44px 이상 대형 타이틀은 -2%까지 타이트하게 — 한글 각진 글자 사이 여백을 줄여
+     Nike의 응축된 디스플레이 조형에 가깝게 만든다 */
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+/* 32px 안팎(스탯 숫자 등) — 대형보다는 느슨하게, 그래도 타이트 유지 */
+.type-display-sm {
+  letter-spacing: -0.01em;
+}
+
+/* 대문자 이월 라벨(eyebrow) — 작은 대문자 텍스트는 넓게 벌려야 읽힌다 */
+.type-eyebrow {
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+}
+
+/* 캡션/메타 정보(11-13px) — 본문보다 살짝 넓혀 밀도 높은 한글 라벨의 가독성 확보 */
+.type-caption {
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+/* Nike tap-collapse feedback */
+.tap {
+  transition:
+    transform 120ms ease,
+    opacity 120ms ease;
+}
+.tap:active {
+  transform: scale(0.97);
+  opacity: 0.6;
+}
+
+/* Hide scrollbars on horizontal rails */
+.rail {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+/* 화면 전환 — 탭 이동 시 살짝 떠오르며 들어온다.
+   pathname을 key로 리마운트해서 트리거한다(PageTransition.tsx). */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-in {
+  animation: page-in 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 바텀시트 — 아래에서 슬라이드 업 */
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.sheet-in {
+  animation: sheet-in 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 배경 스크림 — 페이드 인 */
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.scrim-in {
+  animation: scrim-in 200ms ease-out;
+}
+
+/* 드롭다운 패널 — 아바타 아래에서 살짝 커지며 펼쳐진다 */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.pop-in {
+  animation: pop-in 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+/* 온보딩 "시작하기"처럼, 화면 전체가 하단에서 스윽 올라와 이전 화면을
+   덮는 큰 전환. 탭 이동의 미묘한 page-in과 달리 1초짜리 뚜렷한 연출이라
+   별도 클래스로 뺐다(lib/transition.ts가 1회성으로 트리거). */
+@keyframes slide-up-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.slide-up-in {
+  animation: slide-up-in 1000ms cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 20;
+  background: var(--color-canvas);
+}
+
+/* 모션을 줄여달라는 사용자는 존중한다 */
+@media (prefers-reduced-motion: reduce) {
+  .page-in,
+  .sheet-in,
+  .scrim-in,
+  .pop-in,
+  .slide-up-in {
+    animation: none;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.pulse-ring {
+  animation: pulse-ring 1.8s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
+
+@keyframes bar-bounce {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
