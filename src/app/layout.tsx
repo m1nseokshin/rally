@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bebas_Neue } from "next/font/google";
 import localFont from "next/font/local";
 import Script from "next/script";
+import { BASE_PATH } from "@/lib/basePath";
 import "./globals.css";
 
 // Pretendard — Nike의 Helvetica Now/Futura와 가장 결이 가까운 한글 폰트.
@@ -26,21 +27,26 @@ export const metadata: Metadata = {
     "음악을 분석해 리듬 탁구 XR 세션을 만들고, 기기를 관리하고, 하루의 집중을 되짚는 앱",
   // 홈/플레이/기기/인사이트/설정 탭을 홈 화면에 설치 가능한 웹앱으로 만든다.
   // /rally(XR 세션)는 카메라·오디오·Spotify 실시간 상태를 다루는 화면이라
-  // 서비스워커 캐싱 대상에서 의도적으로 제외했다 — 그래서 아래엔 매니페스트/
-  // 설치 메타데이터만 있고 서비스워커는 두지 않았다. 캐시가 이 화면에 끼면
-  // 카메라 프레임이나 재생 동기화가 오히려 어긋난다.
-  manifest: "/manifest.webmanifest",
+  // 서비스워커 캐싱 대상에서 의도적으로 제외했다 — 그래서 매니페스트(app/manifest.ts)만
+  // 있고 서비스워커는 두지 않았다. 캐시가 이 화면에 끼면 카메라 프레임이나
+  // 재생 동기화가 오히려 어긋난다. manifest 링크는 app/manifest.ts가 있으면
+  // Next가 자동으로 추가해줘서 여기서 따로 지정하지 않는다.
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Rally",
   },
+  // 메타데이터 API의 아이콘/매니페스트 경로는 basePath를 자동으로 안 붙여준다
+  // (에셋 청크·<Link>와 달리) — GitHub Pages(/rally 서브패스)에서 깨지지 않게
+  // 직접 붙인다.
   icons: {
     icon: [
-      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: `${BASE_PATH}/icons/icon-192.png`, sizes: "192x192", type: "image/png" },
+      { url: `${BASE_PATH}/icons/icon-512.png`, sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [
+      { url: `${BASE_PATH}/icons/apple-touch-icon.png`, sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
