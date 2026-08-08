@@ -31,7 +31,12 @@ export default function PageTransition({ children }: { children: ReactNode }) {
   // 채로 시작해 콘텐츠가 뷰포트 밖으로 밀려 "빈 화면"처럼 보이는 버그가 났다.
   // 페이지가 새로 마운트될 때마다 스크롤 컨테이너를 맨 위로 되돌린다.
   useLayoutEffect(() => {
-    rootRef.current?.closest(".overflow-y-auto")?.scrollTo({ top: 0 });
+    // behavior: "instant" — 컨테이너에 scroll-behavior: smooth가 걸려 있어서
+    // 그냥 두면 새 페이지가 페이드인하는 동안 스크롤이 위로 기어올라가는 게
+    // 같이 보인다. 위치 리셋은 전환 전에 이미 끝나 있어야 한다.
+    rootRef.current
+      ?.closest(".overflow-y-auto")
+      ?.scrollTo({ top: 0, behavior: "instant" });
   }, []);
 
   return (

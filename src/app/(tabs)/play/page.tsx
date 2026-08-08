@@ -218,7 +218,12 @@ export default function PlayPage() {
           {source.hiddenCount > 0 ? t("play.filter.empty") : t("play.search.empty")}
         </p>
       ) : (
-        <ul className="mt-2 border-t border-hairline-soft">
+        // key로 리마운트시켜 필터가 바뀔 때마다 목록이 다시 떠오르게 한다 —
+        // 결과가 갱신됐다는 걸 눈으로 확인할 수 있어야 한다
+        <ul
+          key={`${effectiveFilters.source}-${effectiveFilters.genre}-${effectiveFilters.year}-${effectiveFilters.difficulty}-${effectiveFilters.duration}-${shuffle}`}
+          className="results-in mt-2 border-t border-hairline-soft"
+        >
           {list.map((track) => (
             <li key={track.id}>
               <button
@@ -371,6 +376,8 @@ export default function PlayPage() {
             setShuffle(0);
           }}
           onClose={() => setFilterOpen(false)}
+          resultCount={list.length}
+          loading={source.loading}
         />
       )}
     </div>
@@ -519,7 +526,7 @@ function Chip({
       onClick={onClick}
       disabled={disabled}
       aria-pressed={active}
-      className={`tap h-9 shrink-0 rounded-lg px-4 text-[13px] font-medium transition-colors disabled:opacity-40 ${
+      className={`chip h-9 shrink-0 rounded-lg px-4 text-[13px] font-medium disabled:opacity-40 ${
         active ? "bg-ink text-canvas" : "border border-hairline bg-canvas text-ink"
       }`}
     >

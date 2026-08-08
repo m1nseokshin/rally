@@ -20,10 +20,15 @@ export default function TrackFilterSheet({
   filters,
   onChange,
   onClose,
+  resultCount,
+  loading,
 }: {
   filters: Filters;
   onChange: (next: Filters) => void;
   onClose: () => void;
+  /** 지금 필터로 몇 곡이 나오는지 — 시트를 닫지 않아도 바로 보인다 */
+  resultCount: number;
+  loading: boolean;
 }) {
   const { t } = useLocale();
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
@@ -135,7 +140,27 @@ export default function TrackFilterSheet({
           )}
         </div>
 
-        <div className="shrink-0 p-4">
+        {/* 결과 개수를 시트 안에서 실시간으로 보여준다 — 필터를 바꿀 때마다
+            뒤에서 목록이 다시 불려오는데, 시트에 가려 안 보이면 반응이
+            없는 것처럼 느껴진다 */}
+        <div className="shrink-0 border-t border-hairline-soft p-4">
+          <div className="mb-3 flex h-5 items-center justify-center gap-2">
+            {loading ? (
+              <>
+                <span className="size-3.5 animate-spin rounded-full border-2 border-hairline border-t-primary" />
+                <span className="type-caption text-[12px] text-mute">
+                  {t("play.list.loading")}
+                </span>
+              </>
+            ) : (
+              <span
+                key={resultCount}
+                className="pop-in type-caption text-[12px] font-medium text-mute"
+              >
+                {t("play.filter.resultCount", { count: resultCount })}
+              </span>
+            )}
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -172,7 +197,7 @@ function Pill({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`tap h-9 rounded-lg px-4 text-[13px] font-medium transition-colors ${
+      className={`chip h-9 rounded-lg px-4 text-[13px] font-medium ${
         active ? "bg-ink text-canvas" : "bg-cloud text-ink"
       }`}
     >
