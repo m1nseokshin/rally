@@ -7,17 +7,23 @@ import { IconChevron, IconPlay, IconDevice, IconPaddle } from "@/components/icon
 import ProfileMenu from "@/components/ProfileMenu";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useSessionLog } from "@/lib/sessions/useSessionLog";
+import { useSpotify } from "@/lib/spotify/useSpotify";
 
 export default function HomePage() {
   const { t } = useLocale();
   const { sessions: todaySessions } = useSessionLog();
+  const spotify = useSpotify();
   const totalMinutes = todaySessions.reduce((sum, s) => sum + s.minutes, 0);
   const avgFocus = todaySessions.length
     ? Math.round(todaySessions.reduce((sum, s) => sum + s.focus, 0) / todaySessions.length)
     : 0;
   const connected = devices.filter((d) => d.connected);
-  const featured = tracks[1];
-  const recommended = tracks.filter((t) => t.analyzed && t.id !== featured.id);
+
+  // 연동돼 있으면 실제 내 Spotify 곡을, 아니면 목업으로 폴백한다 —
+  // 연동 전에도 홈이 텅 비지 않아야 앱이 뭘 하는 곳인지 보인다.
+  const source = spotify.connected && spotify.tracks.length > 0 ? spotify.tracks : tracks;
+  const featured = source[0];
+  const recommended = source.slice(1, 7);
 
   return (
     <div className="pb-10">
@@ -47,12 +53,22 @@ export default function HomePage() {
           className="tap relative block aspect-[4/5] w-full overflow-hidden bg-black"
           style={{ borderRadius: "var(--radius-panel)" }}
         >
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `radial-gradient(100% 70% at 15% 0%, ${featured.cover[0]}cc 0%, transparent 60%), linear-gradient(180deg, #262626 0%, #000 70%)`,
-            }}
-          />
+          {/* 실제 앨범 아트가 있으면 배경으로 깔고, 없으면 그라디언트로 폴백 */}
+          {featured.image ? (
+            // eslint-disable-next-line @next/next/no-img-element -- 외부 앨범 아트, next/image 도메인 설정 불필요
+            <img
+              src={featured.image}
+              alt=""
+              className="absolute inset-0 size-full object-cover opacity-70"
+            />
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `radial-gradient(100% 70% at 15% 0%, ${featured.cover[0]}cc 0%, transparent 60%), linear-gradient(180deg, #262626 0%, #000 70%)`,
+              }}
+            />
+          )}
 
           {/* 비트 그리드 — 상단 절반 */}
           <div className="absolute inset-x-6 top-[16%] flex h-28 items-end gap-[4px]">
@@ -93,7 +109,7 @@ export default function HomePage() {
         <SectionTitle action={<LinkAction href="/insights">{t("home.today.action")}</LinkAction>}>
           {t("home.today.title")}
         </SectionTitle>
-        <div className="grid grid-cols-3 gap-2 px-6">
+        <div className="stagger grid grid-cols-3 gap-2 px-6">
           <StatTile label={t("home.today.play")} value={totalMinutes} unit="분" />
           <StatTile
             label={t("home.today.avgFocus")}
@@ -110,7 +126,7 @@ export default function HomePage() {
         <SectionTitle action={<LinkAction href="/devices">{t("home.devices.action")}</LinkAction>}>
           {t("home.devices.title")}
         </SectionTitle>
-        <div className="border-t border-hairline-soft">
+        <div className="stagger border-t border-hairline-soft">
           {connected.map((d) => (
             <Link
               key={d.id}
@@ -141,16 +157,26 @@ export default function HomePage() {
         <SectionTitle action={<LinkAction href="/play">{t("home.rail.action")}</LinkAction>}>
           {t("home.rail.title")}
         </SectionTitle>
-        <div className="rail flex gap-3 overflow-x-auto px-6 pb-1">
+        <div className="rail stagger flex gap-3 overflow-x-auto px-6 pb-1">
           {recommended.map((track) => (
             <Link key={track.id} href="/play" className="tap w-[150px] shrink-0">
-              <div
-                className="aspect-square w-full"
-                style={{
-                  borderRadius: "var(--radius-card)",
-                  background: `linear-gradient(150deg, ${track.cover[0]} 0%, ${track.cover[1]} 100%)`,
-                }}
-              />
+              {track.image ? (
+                // eslint-disable-next-line @next/next/no-img-element -- 외부 앨범 아트
+                <img
+                  src={track.image}
+                  alt=""
+                  className="aspect-square w-full object-cover"
+                  style={{ borderRadius: "var(--radius-card)" }}
+                />
+              ) : (
+                <div
+                  className="aspect-square w-full"
+                  style={{
+                    borderRadius: "var(--radius-card)",
+                    background: `linear-gradient(150deg, ${track.cover[0]} 0%, ${track.cover[1]} 100%)`,
+                  }}
+                />
+              )}
               <p className="mt-2 truncate text-[14px] font-semibold text-ink">{track.title}</p>
               <p className="truncate text-[12px] text-mute">{track.artist}</p>
               <div className="mt-2 flex items-center gap-2">

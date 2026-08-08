@@ -18,6 +18,9 @@ import { MOODS } from "@/lib/spotify/moods";
 import {
   activeFilterCount,
   DEFAULT_FILTERS,
+  DIFFICULTY_OPTIONS,
+  DURATION_OPTIONS,
+  YEAR_OPTIONS,
   type Filters,
 } from "@/lib/spotify/filters";
 import TrackFilterSheet from "@/components/TrackFilterSheet";
@@ -164,6 +167,56 @@ export default function PlayPage() {
               </Chip>
             ))}
           </div>
+
+          {/* 장르를 고르면 그 장르를 좁히는 필터들이 아래로 펼쳐진다.
+              항상 렌더하고 클래스만 토글해서 닫힐 때도 부드럽게 접힌다. */}
+          <div className={`row-expand ${filters.genre && !typed ? "open" : ""}`}>
+            <div>
+              <div className="space-y-2.5 px-6 pt-3">
+                <RefineRow label={t("play.filter.section.year")}>
+                  {YEAR_OPTIONS.map((o, i) => (
+                    <MiniChip
+                      key={o.value}
+                      index={i}
+                      active={filters.year === o.value}
+                      onClick={() => {
+                        setFilters((f) => ({ ...f, year: o.value }));
+                        setShuffle(0);
+                      }}
+                    >
+                      {t(o.labelKey)}
+                    </MiniChip>
+                  ))}
+                </RefineRow>
+
+                <RefineRow label={t("play.filter.section.difficulty")}>
+                  {DIFFICULTY_OPTIONS.map((o, i) => (
+                    <MiniChip
+                      key={o.value}
+                      index={i}
+                      active={filters.difficulty === o.value}
+                      onClick={() => setFilters((f) => ({ ...f, difficulty: o.value }))}
+                    >
+                      {t(o.labelKey)}
+                    </MiniChip>
+                  ))}
+                </RefineRow>
+
+                <RefineRow label={t("play.filter.section.duration")}>
+                  {DURATION_OPTIONS.map((o, i) => (
+                    <MiniChip
+                      key={o.value}
+                      index={i}
+                      active={filters.duration === o.value}
+                      onClick={() => setFilters((f) => ({ ...f, duration: o.value }))}
+                    >
+                      {t(o.labelKey)}
+                    </MiniChip>
+                  ))}
+                </RefineRow>
+              </div>
+            </div>
+          </div>
         </section>
       )}
 
@@ -222,7 +275,7 @@ export default function PlayPage() {
         // 결과가 갱신됐다는 걸 눈으로 확인할 수 있어야 한다
         <ul
           key={`${effectiveFilters.source}-${effectiveFilters.genre}-${effectiveFilters.year}-${effectiveFilters.difficulty}-${effectiveFilters.duration}-${shuffle}`}
-          className="results-in mt-2 border-t border-hairline-soft"
+          className="results-in stagger mt-2 border-t border-hairline-soft"
         >
           {list.map((track) => (
             <li key={track.id}>
@@ -505,6 +558,45 @@ function TrackPreviewSheet({
         </div>
       </div>
     </div>
+  );
+}
+
+/** 펼쳐진 세부 필터의 한 분류 — 라벨 + 칩 줄 */
+function RefineRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="type-caption w-14 shrink-0 text-[11px] font-medium text-stone">
+        {label}
+      </span>
+      <div className="rail flex min-w-0 flex-1 gap-1.5 overflow-x-auto">{children}</div>
+    </div>
+  );
+}
+
+/** 세부 필터 칩 — index만큼 늦게 등장해 왼쪽부터 차례로 밀려 나온다 */
+function MiniChip({
+  children,
+  active,
+  index,
+  onClick,
+}: {
+  children: React.ReactNode;
+  active: boolean;
+  index: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`chip chip-push h-7 shrink-0 rounded-lg px-3 text-[12px] font-medium ${
+        active ? "bg-primary text-on-primary" : "bg-cloud text-mute"
+      }`}
+      style={{ animationDelay: `${index * 55}ms` }}
+    >
+      {children}
+    </button>
   );
 }
 

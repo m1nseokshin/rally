@@ -94,7 +94,7 @@ export default function DevicesPage() {
       {xr.length > 0 && (
         <section className="mt-9">
           <SectionTitle>{t("devices.section.xr")}</SectionTitle>
-          <div className="border-t border-hairline-soft">
+          <div className="stagger border-t border-hairline-soft">
             {xr.map((d) => (
               <DeviceRow
                 key={d.id}

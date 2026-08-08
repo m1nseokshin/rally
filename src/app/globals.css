@@ -131,8 +131,8 @@ body {
 /* Nike tap-collapse feedback */
 .tap {
   transition:
-    transform 340ms ease,
-    opacity 340ms ease;
+    transform 520ms ease,
+    opacity 520ms ease;
 }
 .tap:active {
   transform: scale(0.97);
@@ -153,6 +153,51 @@ body {
   transform: scale(0.93);
 }
 
+/*
+  장르를 고르면 세부 필터 줄이 아래로 펼쳐진다.
+
+  grid-template-rows: 0fr → 1fr 트릭 — height: auto는 애니메이션이 안 되지만
+  fr 단위는 보간이 된다. 자식에 overflow: hidden이 있어야 잘리며 열린다.
+  조건부 렌더가 아니라 클래스 토글이라 닫힐 때도 같은 곡선으로 접힌다.
+*/
+.row-expand {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 620ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.row-expand > * {
+  overflow: hidden;
+  min-height: 0;
+}
+.row-expand.open {
+  grid-template-rows: 1fr;
+}
+
+/*
+  펼쳐지는 줄 안의 칩 하나하나 — 폭이 0에서 벌어지며 옆 칩을 밀어낸다.
+  width: auto는 보간이 안 되니 max-width로 대신한다(칩이 이보다 길 일은 없다).
+  음수 margin에서 0으로 가는 것도 같이 넣어야 flex gap까지 자연스럽게 벌어진다.
+*/
+@keyframes chip-push-in {
+  from {
+    max-width: 0;
+    opacity: 0;
+    margin-right: -0.5rem;
+    transform: translateX(-6px) scale(0.9);
+  }
+  to {
+    max-width: 240px;
+    opacity: 1;
+    margin-right: 0;
+    transform: translateX(0) scale(1);
+  }
+}
+.chip-push {
+  animation: chip-push-in 560ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 /* 필터 결과가 갱신될 때 목록이 살짝 떠오르며 바뀐다 —
    "필터를 바꿨더니 다시 불러왔다"가 눈에 보여야 한다 */
 @keyframes results-in {
@@ -168,6 +213,38 @@ body {
 .results-in {
   animation: results-in 900ms cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/*
+  리스트가 위에서부터 한 항목씩 차례로 떠오른다.
+  부모에 .stagger만 붙이면 자식들이 알아서 순차 등장한다 — JS 없이 nth-child로
+  지연을 준다. 12개까지만 계단을 만들고 그 뒤는 같은 지연을 공유한다(끝없이
+  늘어나면 마지막 항목이 몇 초씩 늦게 떠서 오히려 답답해진다).
+*/
+@keyframes item-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.stagger > * {
+  animation: item-in 760ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 700ms;
+}
+.stagger > *:nth-child(1) { animation-delay: 60ms; }
+.stagger > *:nth-child(2) { animation-delay: 120ms; }
+.stagger > *:nth-child(3) { animation-delay: 180ms; }
+.stagger > *:nth-child(4) { animation-delay: 240ms; }
+.stagger > *:nth-child(5) { animation-delay: 300ms; }
+.stagger > *:nth-child(6) { animation-delay: 360ms; }
+.stagger > *:nth-child(7) { animation-delay: 420ms; }
+.stagger > *:nth-child(8) { animation-delay: 480ms; }
+.stagger > *:nth-child(9) { animation-delay: 540ms; }
+.stagger > *:nth-child(10) { animation-delay: 600ms; }
+.stagger > *:nth-child(11) { animation-delay: 660ms; }
 
 /* Hide scrollbars on horizontal rails */
 .rail {
@@ -216,7 +293,7 @@ html {
   }
 }
 .page-in {
-  animation: page-in 2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: page-in 2.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 바텀시트 — 아래에서 슬라이드 업 */
@@ -229,7 +306,7 @@ html {
   }
 }
 .sheet-in {
-  animation: sheet-in 820ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: sheet-in 1100ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 배경 스크림 — 페이드 인 */
@@ -242,7 +319,7 @@ html {
   }
 }
 .scrim-in {
-  animation: scrim-in 600ms ease-out;
+  animation: scrim-in 900ms ease-out;
 }
 
 /* 드롭다운 패널 — 아바타 아래에서 살짝 커지며 펼쳐진다 */
@@ -273,7 +350,7 @@ html {
   }
 }
 .slide-up-in {
-  animation: slide-up-in 1000ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slide-up-in 2400ms cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   z-index: 20;
   background: var(--color-canvas);

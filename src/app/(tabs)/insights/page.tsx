@@ -42,7 +42,7 @@ export default function InsightsPage() {
       />
 
       {/* 핵심 수치 */}
-      <section className="grid grid-cols-3 gap-2 px-6">
+      <section className="stagger grid grid-cols-3 gap-2 px-6">
         <StatTile label={t("insights.stat.totalPlay")} value={totalMinutes} unit="분" />
         <StatTile
           label={t("insights.stat.avgFocus")}
@@ -156,7 +156,7 @@ export default function InsightsPage() {
       {/* 세션 로그 */}
       <section className="mt-10">
         <SectionTitle>{t("insights.session.title")}</SectionTitle>
-        <ul className="border-t border-hairline-soft">
+        <ul className="stagger border-t border-hairline-soft">
           {todaySessions.map((s) => (
             <li
               key={s.id}
