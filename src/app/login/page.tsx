@@ -6,8 +6,6 @@ import { PageHeader, PillButton } from "@/components/ui";
 import { IconBack } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useAuth } from "@/lib/auth/useAuth";
-import { startKakaoLogin } from "@/lib/kakao/auth";
-import KakaoLoginButton from "@/components/KakaoLoginButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,20 +17,6 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [kakaoLoading, setKakaoLoading] = useState(false);
-
-  async function handleKakao() {
-    setError(null);
-    setKakaoLoading(true);
-    try {
-      // 카카오 로그인 화면으로 전체 페이지가 이동한다 — 성공/실패 처리는
-      // 돌아온 뒤 /callback/kakao 페이지에서 이어서 한다.
-      await startKakaoLogin("login");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("login.kakao.missingKey"));
-      setKakaoLoading(false);
-    }
-  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -72,14 +56,6 @@ export default function LoginPage() {
       <PageHeader eyebrow={t("login.eyebrow")} title={t("login.title")} desc={t("login.desc")} />
 
       <section className="px-6">
-        <KakaoLoginButton onClick={handleKakao} disabled={kakaoLoading} />
-
-        <div className="my-6 flex items-center gap-3">
-          <span className="h-px flex-1 bg-hairline-soft" />
-          <span className="text-[12px] font-medium text-mute">{t("login.divider")}</span>
-          <span className="h-px flex-1 bg-hairline-soft" />
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-3">
           {mode === "signup" && (
             <Field
@@ -127,7 +103,8 @@ export default function LoginPage() {
   );
 }
 
-function Field({
+/** onboarding의 로그인/회원가입 단계에서도 그대로 쓴다 */
+export function Field({
   label,
   value,
   onChange,

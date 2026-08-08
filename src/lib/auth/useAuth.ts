@@ -3,8 +3,8 @@
 import { useCallback, useSyncExternalStore } from "react";
 
 export type AuthUser = {
-  provider: "kakao" | "email";
-  id: string; // 카카오는 카카오 회원번호, 이메일은 로그인 시 쓴 아이디/이메일
+  provider: "email";
+  id: string; // 로그인 시 쓴 아이디/이메일
   name: string;
   email?: string;
 };
@@ -104,10 +104,6 @@ function signInWithEmail(idOrEmail: string, password: string) {
   setSession({ provider: "email", id: account.id, name: account.name, email: account.email });
 }
 
-function signInWithKakao(profile: { id: string; name: string; email?: string }) {
-  setSession({ provider: "kakao", id: profile.id, name: profile.name, email: profile.email });
-}
-
 export function useAuth() {
   const user = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
@@ -124,10 +120,6 @@ export function useAuth() {
     ),
     signInWithEmail: useCallback(
       (id: string, password: string) => signInWithEmail(id, password),
-      [],
-    ),
-    signInWithKakao: useCallback(
-      (profile: { id: string; name: string; email?: string }) => signInWithKakao(profile),
       [],
     ),
   };

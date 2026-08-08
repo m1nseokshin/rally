@@ -66,13 +66,7 @@ export default function SettingsPage() {
         <Row label={t("settings.account.plan")} value={t("settings.account.planValue")} />
         <Row
           label={t("settings.account.loginMethod")}
-          value={
-            user
-              ? user.provider === "kakao"
-                ? t("settings.account.kakaoLabel")
-                : t("settings.account.emailLabel")
-              : t("settings.account.notLoggedIn")
-          }
+          value={user ? t("settings.account.emailLabel") : t("settings.account.notLoggedIn")}
           onClick={user ? signOut : () => router.push("/login")}
         />
       </section>

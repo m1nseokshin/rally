@@ -6,8 +6,7 @@ import { markOnboardingComplete } from "@/lib/onboarding";
 import { requestTransition } from "@/lib/transition";
 import { IconWave, IconPaddle, IconInsight, IconSpotify } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
-import { startKakaoLogin } from "@/lib/kakao/auth";
-import KakaoLoginButton from "@/components/KakaoLoginButton";
+import { useAuth } from "@/lib/auth/useAuth";
 import type { DictKey, Locale } from "@/lib/i18n/dictionary";
 
 type Step = {
@@ -55,21 +54,30 @@ const SWIPE_THRESHOLD_RATIO = 0.18;
 const OVERSCROLL_RESISTANCE = 0.35;
 /** 스플래시가 떠 있는 시간 */
 const SPLASH_MS = 2000;
-/** 스플래시 → 언어 → 앱 설명, 세 구간 사이를 좌우로 넘길 때 걸리는 시간 */
+/** 스플래시 → 언어 → 로그인/회원가입 → 앱 설명, 구간 사이를 좌우로 넘길 때 걸리는 시간 */
 const PHASE_TRANSITION_MS = 600;
 
-const PHASES = ["splash", "language", "steps"] as const;
+// 0 스플래시 → 1 언어 선택 → 2 로그인/회원가입 → 3 앱 설명(회원가입 때만 도달)
+const PHASES = ["splash", "language", "auth", "steps"] as const;
 
 export default function OnboardingPage() {
-  // 스플래시 → 언어 선택 → 앱 설명을 하나의 가로 트랙에 나란히 두고
-  // translateX로 넘긴다 — 세 구간을 오갈 때마다 뚝 끊기지 않고 한 화면이
-  // 옆으로 밀려나면서 다음 화면이 들어오는 느낌을 준다.
+  const router = useRouter();
+  // 네 구간을 하나의 가로 트랙에 나란히 두고 translateX로 넘긴다 — 구간을
+  // 오갈 때마다 뚝 끊기지 않고 한 화면이 옆으로 밀려나면서 다음 화면이
+  // 들어오는 느낌을 준다.
   const [phaseIndex, setPhaseIndex] = useState(0);
 
   useEffect(() => {
     const id = setTimeout(() => setPhaseIndex(1), SPLASH_MS);
     return () => clearTimeout(id);
   }, []);
+
+  /** 로그인(기존 계정)은 앱 설명 없이 바로 홈으로 — 회원가입만 앱 설명을 본다 */
+  function finishToHome() {
+    markOnboardingComplete();
+    requestTransition("slide-up");
+    router.replace("/");
+  }
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-black">
@@ -86,6 +94,12 @@ export default function OnboardingPage() {
         </div>
         <div className="h-full" style={{ width: `${100 / PHASES.length}%` }}>
           <LanguagePicker onContinue={() => setPhaseIndex(2)} />
+        </div>
+        <div className="h-full" style={{ width: `${100 / PHASES.length}%` }}>
+          <AuthPhase
+            onLoggedIn={finishToHome}
+            onSignedUp={() => setPhaseIndex(3)}
+          />
         </div>
         <div className="h-full" style={{ width: `${100 / PHASES.length}%` }}>
           <StepsCarousel />
@@ -106,7 +120,7 @@ function Splash() {
   );
 }
 
-/** 2) 언어 선택 — 온보딩 설명을 어떤 언어로 보여줄지 먼저 고른다 */
+/** 2) 언어 선택 — 이후 화면(로그인/앱 설명)을 어떤 언어로 보여줄지 먼저 고른다 */
 function LanguagePicker({ onContinue }: { onContinue: () => void }) {
   const { locale, setLocale, t } = useLocale();
 
@@ -157,14 +171,136 @@ function LanguagePicker({ onContinue }: { onContinue: () => void }) {
   );
 }
 
-/** 3) 앱 설명 — 좌우 스와이프 가능한 캐러셀, 마지막 칸에서 시작하기/카카오 로그인 */
+/** 3) 로그인 / 회원가입 — 기존 계정 로그인은 앱 설명 없이 바로 홈으로,
+ *  회원가입은 다음 칸(앱 설명)으로 넘어간다. */
+function AuthPhase({
+  onLoggedIn,
+  onSignedUp,
+}: {
+  onLoggedIn: () => void;
+  onSignedUp: () => void;
+}) {
+  const { t } = useLocale();
+  const { signInWithEmail, signUpWithEmail } = useAuth();
+  const [mode, setMode] = useState<"login" | "signup">("signup");
+  const [id, setId] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (!id.trim() || !password.trim() || (mode === "signup" && !name.trim())) {
+      setError(t("login.error.required"));
+      return;
+    }
+
+    try {
+      if (mode === "signup") {
+        signUpWithEmail(id.trim(), password, name.trim());
+        onSignedUp();
+      } else {
+        signInWithEmail(id.trim(), password);
+        onLoggedIn();
+      }
+    } catch (e) {
+      const key = e instanceof Error ? e.message : "invalid";
+      setError(key === "exists" ? t("login.error.exists") : t("login.error.invalid"));
+    }
+  }
+
+  return (
+    <div className="flex h-full flex-col justify-center bg-black p-6">
+      <p className="type-eyebrow text-[12px] font-medium uppercase text-primary">
+        {t("login.eyebrow")}
+      </p>
+      <h1 className="type-display mt-2 text-[36px] leading-[1.05] text-white">
+        {mode === "signup" ? t("login.signupSubmit") : t("login.submit")}
+      </h1>
+
+      <form onSubmit={handleSubmit} className="mt-6 space-y-3">
+        {mode === "signup" && (
+          <DarkField
+            label={t("profile.namePlaceholder")}
+            value={name}
+            onChange={setName}
+            placeholder={t("profile.namePlaceholder")}
+          />
+        )}
+        <DarkField
+          label={t("login.id")}
+          value={id}
+          onChange={setId}
+          placeholder={t("login.idPlaceholder")}
+        />
+        <DarkField
+          label={t("login.password")}
+          value={password}
+          onChange={setPassword}
+          placeholder={t("login.passwordPlaceholder")}
+          type="password"
+        />
+
+        {error && <p className="text-[12px] text-primary">{error}</p>}
+
+        <button
+          type="submit"
+          className="tap mt-2 h-14 w-full rounded-lg bg-white text-[16px] font-semibold text-black"
+        >
+          {mode === "signup" ? t("login.signupSubmit") : t("login.submit")}
+        </button>
+      </form>
+
+      <button
+        type="button"
+        onClick={() => {
+          setMode((m) => (m === "login" ? "signup" : "login"));
+          setError(null);
+        }}
+        className="tap mt-4 w-full text-center text-[13px] font-medium text-white/60 underline underline-offset-4"
+      >
+        {mode === "login" ? t("login.signupToggle") : t("login.loginToggle")}
+      </button>
+    </div>
+  );
+}
+
+/** 온보딩은 항상 어두운 배경이라 /login의 밝은 테마 Field와는 스타일이 다르다 */
+function DarkField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  type?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[12px] font-medium text-white/50">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="h-12 w-full rounded-lg bg-white/10 px-4 text-[15px] text-white outline-none placeholder:text-white/30"
+      />
+    </label>
+  );
+}
+
+/** 4) 앱 설명 — 좌우 스와이프 가능한 캐러셀. 회원가입을 마친 경우에만 도달한다. */
 function StepsCarousel() {
   const router = useRouter();
   const { t } = useLocale();
   const [step, setStep] = useState(0);
   const isLast = step === STEPS.length - 1;
-  const [kakaoLoading, setKakaoLoading] = useState(false);
-  const [kakaoError, setKakaoError] = useState<string | null>(null);
 
   // 터치 드래그 — 실시간으로 손가락을 그대로 따라가다가(1:1), 손을 떼는
   // 순간에만 스냅 애니메이션을 켠다. dragX는 렌더 중 transform에 바로 반영해야
@@ -225,19 +361,6 @@ function StepsCarousel() {
   function next() {
     if (isLast) finish(true);
     else setStep((s) => s + 1);
-  }
-
-  async function startWithKakao() {
-    setKakaoError(null);
-    setKakaoLoading(true);
-    try {
-      // 카카오 로그인 화면으로 전체 페이지가 이동한다 — 온보딩 완료 처리와
-      // 홈 화면 슬라이드업 전환은 돌아온 뒤 /callback/kakao에서 이어서 한다.
-      await startKakaoLogin("onboarding");
-    } catch (e) {
-      setKakaoError(e instanceof Error ? e.message : t("login.kakao.missingKey"));
-      setKakaoLoading(false);
-    }
   }
 
   return (
@@ -323,23 +446,7 @@ function StepsCarousel() {
         >
           {isLast ? t("onboarding.start") : t("onboarding.next")}
         </button>
-
-        {/* 마지막 칸에서만 — 그냥 시작하기 대신 카카오로 로그인해서 시작할 수도 있다 */}
-        {isLast && (
-          <>
-            <div className="mt-4 flex items-center gap-3">
-              <span className="h-px flex-1 bg-white/15" />
-              <span className="text-[11px] font-medium text-white/40">{t("onboarding.or")}</span>
-              <span className="h-px flex-1 bg-white/15" />
-            </div>
-            <div className="mt-4">
-              <KakaoLoginButton onClick={startWithKakao} disabled={kakaoLoading} />
-            </div>
-            {kakaoError && <p className="mt-2 text-[12px] text-primary">{kakaoError}</p>}
-          </>
-        )}
       </div>
     </div>
   );
 }
-

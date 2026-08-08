@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 export type MotionEvent = {
   /** 움직임 세기 0~1 */
   intensity: number;
-  /** 움직임 중심의 가로 위치 0(왼쪽)~1(오른쪽) */
+  /** 움직임 중심의 가로 위치 0(왼쪽)~1(오른쪽) — 화면에 보이는 대로(미러링 반영) */
   x: number;
   at: number;
 };
@@ -115,7 +115,10 @@ export function useMotionCamera({
             lastSwingRef.current = now;
             onSwingRef.current?.({
               intensity: Math.min(1, ratio / (threshold * 3)),
-              x: changed > 0 ? weightedX / changed : 0.5,
+              // 배경 <video>가 scale-x-[-1]로 뒤집혀 보이므로 여기서도 뒤집어
+              // HandPose.x(이미 1-cx로 미러링됨)와 좌표계를 맞춘다 —
+              // 안 맞추면 두 스윙 소스가 서로 반대편을 가리킨다.
+              x: changed > 0 ? 1 - weightedX / changed : 0.5,
               at: now,
             });
           }

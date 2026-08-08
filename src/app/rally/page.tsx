@@ -2,29 +2,30 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMotionCamera } from "@/lib/rally/useMotionCamera";
+import { useMotionCamera, type MotionEvent } from "@/lib/rally/useMotionCamera";
 import { useBeatEngine, type Judgement } from "@/lib/rally/useBeatEngine";
 import { useDeviceOrientation } from "@/lib/rally/useDeviceOrientation";
-import { useHandTracking } from "@/lib/rally/useHandTracking";
+import { useHandTracking, type Swing } from "@/lib/rally/useHandTracking";
+import { applyContact } from "@/lib/rally/scoring";
+import {
+  HAND_LIVE_TIMEOUT,
+  LANE_HALF_SPAN,
+  MIN_BALL_GAP,
+  TARGET_BALL_GAP,
+  TRAVEL,
+} from "@/lib/rally/rallyConfig";
 import { createPlayer, type RallyPlayer } from "@/lib/spotify/player";
 import { hasStreamingScope } from "@/lib/spotify/auth";
 import { IconBack } from "@/components/icons";
-import Paddle3D, { type Paddle3DHandle } from "@/components/Paddle3D";
+import RallyScene, { type RallySceneHandle } from "@/components/RallyScene";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useSessionLog } from "@/lib/sessions/useSessionLog";
 
 type Stage = "ready" | "playing" | "done";
+/** 판정 표시 — 퍼펙트 중에서도 강하게 친 건 따로 보여준다 */
+type Flash = Judgement | "smash";
 
-/** 화면에 날아오는 공 하나 */
-type Ball = {
-  id: number;
-  /** 도달 시각 (경과초) */
-  hitAt: number;
-  strong: boolean;
-  /** 좌/우 어느 쪽으로 오는지 0~1 */
-  lane: number;
-  state: "flying" | "hit" | "missed";
-};
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
 function RallyGame() {
   const router = useRouter();
@@ -44,25 +45,40 @@ function RallyGame() {
   );
 
   const [stage, setStage] = useState<Stage>("ready");
-  const [balls, setBalls] = useState<Ball[]>([]);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
   const [counts, setCounts] = useState({ perfect: 0, good: 0, miss: 0 });
-  const [flash, setFlash] = useState<Judgement | null>(null);
+  const [flash, setFlash] = useState<Flash | null>(null);
   const [playerNote, setPlayerNote] = useState<string | null>(null);
   // Spotify 실제 음원이 재생 중인지 — 렌더에 쓰이므로 ref가 아니라 state
   const [spotifyPlaying, setSpotifyPlaying] = useState(false);
+  // HUD용 — 마지막 스윙 세기와 현재 그립. 초당 몇 번만 갱신돼 state로 둬도 무해하다.
+  const [swingPower, setSwingPower] = useState(0);
+  const [grip, setGrip] = useState(0);
 
   const playerRef = useRef<RallyPlayer | null>(null);
   const spawnedRef = useRef(new Set<number>());
-  const ballIdRef = useRef(0);
+  const lastSpawnAtRef = useRef(-Infinity);
   const rafRef = useRef<number | null>(null);
-  const paddleRef = useRef<Paddle3DHandle>(null);
+  const sceneRef = useRef<RallySceneHandle>(null);
   const startedAtRef = useRef<number | null>(null);
   const savedRef = useRef(false);
-  const { tiltRef, requestPermission: requestOrientation } = useDeviceOrientation();
+  // 렌더 중이 아니라 이벤트/rAF 안에서만 읽는다 — onSwing을 매 렌더 새로
+  // 만들지 않기 위해 stage/combo를 ref로도 들고 있는다.
+  const stageRef = useRef<Stage>("ready");
+  const comboRef = useRef(0);
+  // 손 추적이 최근까지 살아 있었는가 — 모션 카메라 폴백을 켤지 결정한다
+  const handLiveRef = useRef(0);
+  const { tiltRef, hasGyroRef, requestPermission: requestOrientation } = useDeviceOrientation();
   const { addSession } = useSessionLog();
+
+  useEffect(() => {
+    stageRef.current = stage;
+  }, [stage]);
+  useEffect(() => {
+    comboRef.current = combo;
+  }, [combo]);
 
   const beat = useBeatEngine({
     bpm,
@@ -72,103 +88,114 @@ function RallyGame() {
     muteClick: spotifyPlaying,
   });
 
-  /** 스윙이 들어오면 판정하고 가장 가까운 공을 쳐낸다 */
-  const onSwing = useCallback(() => {
-    if (stage !== "playing") return;
-    paddleRef.current?.swing();
-    const { result } = beat.judge();
+  /** 휘두르는 제스처가 들어오면 타이밍 + 공간을 함께 판정한다 */
+  const handleSwing = useCallback(
+    (s: Swing) => {
+      if (stageRef.current !== "playing") return;
 
-    setFlash(result);
-    setTimeout(() => setFlash(null), 260);
+      // 씬이 라켓 애니메이션을 켜고 라켓↔공 거리로 공간 판정을 즉시 돌려준다.
+      // 비동기로 만들면 프레임이 밀려 리듬 판정이 어긋나므로 반드시 동기다.
+      const outcome = sceneRef.current?.swing(s.power, s.source);
+      const { result: timing } = beat.judge();
+      const result = applyContact(timing, outcome?.contact ?? "clean");
 
-    // 헛스윙은 콤보만 끊는다 — miss 집계는 공을 놓쳤을 때 한 번만 한다
-    if (result === "miss") {
-      setCombo(0);
-      return;
-    }
+      setSwingPower(s.power);
+      setFlash(result === "perfect" && s.power > 0.8 ? "smash" : result);
+      setTimeout(() => setFlash(null), 260);
 
-    const gain = result === "perfect" ? 100 : 50;
-    setScore((s) => s + gain + combo * 2);
-    setCombo((c) => {
-      const next = c + 1;
-      setMaxCombo((m) => Math.max(m, next));
-      return next;
-    });
-    setCounts((c) => ({ ...c, [result]: c[result] + 1 }));
+      // 헛스윙/빗맞음은 콤보만 끊는다 — miss 집계는 공이 실제로 지나갈 때
+      // 씬이 onBallMissed로 한 번만 알려준다(중복 집계 방지).
+      if (result === "miss") {
+        setCombo(0);
+        return;
+      }
 
-    // 날아오던 공 중 가장 임박한 것을 맞은 상태로 전환
-    const t = beat.elapsed();
-    setBalls((prev) => {
-      let bestIdx = -1;
-      let bestDiff = Infinity;
-      prev.forEach((b, i) => {
-        if (b.state !== "flying") return;
-        const diff = Math.abs(b.hitAt - t);
-        if (diff < bestDiff) {
-          bestDiff = diff;
-          bestIdx = i;
-        }
+      // 세게 칠수록 점수가 오른다 — 살살 치면 70%, 풀스윙이면 130%
+      const base = result === "perfect" ? 100 : 50;
+      const gain = Math.round(base * (0.7 + 0.6 * s.power));
+      setScore((v) => v + gain + comboRef.current * 2);
+      setCombo((c) => {
+        const next = c + 1;
+        setMaxCombo((m) => Math.max(m, next));
+        return next;
       });
-      if (bestIdx < 0) return prev;
-      const next = [...prev];
-      next[bestIdx] = { ...next[bestIdx], state: "hit" };
-      return next;
-    });
-  }, [stage, beat, combo]);
+      setCounts((c) => ({ ...c, [result]: c[result] + 1 }));
+    },
+    [beat],
+  );
+
+  /** 공을 놓쳤을 때 — 씬이 공 하나당 정확히 한 번만 호출한다 */
+  const handleBallMissed = useCallback(() => {
+    setCombo(0);
+    setCounts((c) => ({ ...c, miss: c.miss + 1 }));
+  }, []);
+
+  const onMotionSwing = useCallback(
+    (e: MotionEvent) => {
+      // 손 추적이 살아 있으면 프레임 차분은 무시한다 — 지나가는 사람이나
+      // 조명 변화만으로도 오발동해서, 어디까지나 보조 수단이다.
+      if (performance.now() - handLiveRef.current < HAND_LIVE_TIMEOUT) return;
+      handleSwing({ power: e.intensity, x: e.x, y: 0.6, dir: 0, at: e.at, source: "motion" });
+    },
+    [handleSwing],
+  );
 
   const {
     videoRef,
     start: startCamera,
     stop: stopCamera,
     error: cameraError,
-    intensity: motionIntensity,
-  } = useMotionCamera({ onSwing });
+  } = useMotionCamera({ onSwing: onMotionSwing });
 
-  // 손이 인식되면 그 위치로, 못 잡으면 자이로로 — Paddle3D 안에서 알아서 섞는다
-  const { getPose: getHandPose } = useHandTracking(videoRef, stage === "playing");
+  // 손이 인식되면(주먹이든 편 손바닥이든) 라켓이 그 위치를 따라가고,
+  // 휘두르는 제스처가 나오면 handleSwing이 호출된다.
+  const { getPose: getHandPose } = useHandTracking(
+    videoRef,
+    stage === "playing",
+    handleSwing,
+  );
 
-  /** 공 스폰 + 수명 관리 루프 */
+  const getElapsed = useCallback(() => beat.elapsed(), [beat]);
+
+  /** 공 스폰 루프 — 공 위치/수명은 전부 씬이 관리하므로 여기선 스폰만 한다 */
   useEffect(() => {
     if (stage !== "playing") return;
 
+    const interval = 60 / Math.max(60, bpm);
+    // 비트를 솎아 공을 줄인다. 음악적으로 자연스러운 배수(1,2,4,8)로만
+    // 건너뛴다 — 3이나 5로 솎으면 박이 어긋나 들린다.
+    const stride = clamp(
+      2 ** Math.round(Math.log2(TARGET_BALL_GAP / interval)),
+      1,
+      8,
+    );
+    // 강박(Spotify 랠리 포인트)이 항상 공이 되도록 위상을 맞춘다
+    const phase = hits.length
+      ? Math.round((hits[0] * duration) / interval) % stride
+      : 0;
+
     const loop = () => {
       rafRef.current = requestAnimationFrame(loop);
+      // elapsed()는 시작 전 0을 반환한다 — 가드가 없으면 가짜 공이 무더기로 나온다
+      if (!beat.running) return;
       const t = beat.elapsed();
 
-      // 2초 뒤에 도달할 비트를 미리 공으로 띄운다
-      for (const b of beat.upcoming(2)) {
+      for (const b of beat.upcoming(TRAVEL + 0.25)) {
         if (spawnedRef.current.has(b.id)) continue;
-        if (b.time - t > 1.9) continue;
+        if (b.time - t > TRAVEL + 0.1) continue;
+        if (b.id % stride !== phase) continue;
+        if (b.time - lastSpawnAtRef.current < MIN_BALL_GAP) continue;
         spawnedRef.current.add(b.id);
-        setBalls((prev) => [
-          ...prev,
-          {
-            id: ballIdRef.current++,
-            hitAt: b.time,
-            strong: b.strong,
-            lane: (b.id * 0.37) % 1, // 결정적 분포 — 같은 곡이면 같은 패턴
-            state: "flying",
-          },
-        ]);
-      }
-
-      // 판정 시점을 지나친 공은 미스 처리 후 제거.
-      // 새로 미스가 난 순간에만 콤보를 끊는다.
-      setBalls((prev) => {
-        let newlyMissed = 0;
-        const updated = prev.map((ball) => {
-          if (ball.state === "flying" && t > ball.hitAt + 0.3) {
-            newlyMissed++;
-            return { ...ball, state: "missed" as const };
-          }
-          return ball;
+        lastSpawnAtRef.current = b.time;
+        // 황금비 분포 — 연속으로 비슷한 레인이 나오지 않고 고르게 퍼진다
+        const lane = 0.12 + ((b.id * 0.618033988749895) % 1) * 0.76;
+        sceneRef.current?.spawnBall({
+          id: b.id,
+          hitAt: b.time,
+          strong: b.strong,
+          lane: (lane - 0.5) * 2 * LANE_HALF_SPAN,
         });
-        if (newlyMissed > 0) {
-          setCombo(0);
-          setCounts((c) => ({ ...c, miss: c.miss + newlyMissed }));
-        }
-        return updated.filter((ball) => t < ball.hitAt + 1);
-      });
+      }
 
       if (t > duration) setStage("done");
     };
@@ -176,7 +203,25 @@ function RallyGame() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [stage, beat, duration]);
+  }, [stage, beat, duration, bpm, hits]);
+
+  /** 그립 표시 + 손 생존 여부 — 10Hz면 충분하고 렌더 부담이 없다 */
+  useEffect(() => {
+    if (stage !== "playing") return;
+    const id = setInterval(() => {
+      const pose = getHandPose();
+      if (pose.present) handLiveRef.current = performance.now();
+      setGrip(pose.present ? pose.curl : 0);
+    }, 100);
+    return () => clearInterval(id);
+  }, [stage, getHandPose]);
+
+  /** 스윙 파워 게이지는 서서히 내려간다 */
+  useEffect(() => {
+    if (swingPower === 0) return;
+    const id = setTimeout(() => setSwingPower(0), 600);
+    return () => clearTimeout(id);
+  }, [swingPower]);
 
   const startGame = useCallback(async () => {
     // iOS는 자이로 권한 요청이 클릭 제스처 직후여야만 동작한다 —
@@ -277,7 +322,7 @@ function RallyGame() {
         muted
         className="absolute inset-0 size-full scale-x-[-1] object-cover"
       />
-      <div className="absolute inset-0 bg-black/35" />
+      <div className="absolute inset-0 bg-black/45" />
 
       {stage === "ready" && (
         <ReadyOverlay
@@ -292,17 +337,16 @@ function RallyGame() {
 
       {stage === "playing" && (
         <>
-          {/* 코트 라인 */}
-          <div className="absolute inset-x-0 bottom-[18%] h-px bg-white/25" />
-          <div className="absolute inset-x-[8%] bottom-[16%] h-[3px] rounded-full bg-primary/80" />
-
-          {/* 날아오는 공 */}
-          {balls.map((ball) => (
-            <BallView key={ball.id} ball={ball} elapsed={beat.elapsed()} />
-          ))}
-
-          {/* 3D 라켓 — 자이로 기울기를 그대로 따라가며 가상공간에 떠 있다 */}
-          <Paddle3D ref={paddleRef} tiltRef={tiltRef} getHandPose={getHandPose} />
+          {/* 3D 랠리 씬 — 라인 탁구대, 날아오는 공, 손을 따라오는 라켓이
+              모두 같은 가상공간에 있다 */}
+          <RallyScene
+            ref={sceneRef}
+            tiltRef={tiltRef}
+            hasGyroRef={hasGyroRef}
+            getHandPose={getHandPose}
+            getElapsed={getElapsed}
+            onBallMissed={handleBallMissed}
+          />
 
           {/* HUD */}
           <div className="absolute inset-x-0 top-0 flex items-start justify-between p-5">
@@ -337,7 +381,7 @@ function RallyGame() {
 
           {/* 콤보 */}
           {combo > 1 && (
-            <div className="pointer-events-none absolute left-1/2 top-[16%] -translate-x-1/2 text-center">
+            <div className="pointer-events-none absolute left-1/2 top-[14%] -translate-x-1/2 text-center">
               <p className="type-display text-[52px] leading-none text-primary">{combo}</p>
               <p className="type-eyebrow text-[10px] font-semibold uppercase text-white/80">
                 combo
@@ -347,36 +391,53 @@ function RallyGame() {
 
           {/* 판정 표시 */}
           {flash && (
-            <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className="pointer-events-none absolute left-1/2 top-[38%] -translate-x-1/2 -translate-y-1/2">
               <p
-                className={`type-display text-[44px] ${
-                  flash === "perfect"
+                className={`type-display ${flash === "smash" ? "text-[56px]" : "text-[44px]"} ${
+                  flash === "smash" || flash === "perfect"
                     ? "text-primary"
                     : flash === "good"
                       ? "text-white"
                       : "text-white/40"
                 }`}
               >
-                {flash === "perfect"
-                  ? t("rally.judge.perfect")
-                  : flash === "good"
-                    ? t("rally.judge.good")
-                    : t("rally.judge.miss")}
+                {flash === "smash"
+                  ? t("rally.judge.smash")
+                  : flash === "perfect"
+                    ? t("rally.judge.perfect")
+                    : flash === "good"
+                      ? t("rally.judge.good")
+                      : t("rally.judge.miss")}
               </p>
             </div>
           )}
 
-          {/* 모션 감도 게이지 */}
-          <div className="absolute bottom-5 left-5 flex items-center gap-2">
-            <span className="h-1.5 w-24 overflow-hidden rounded-full bg-white/20">
+          {/* 스윙 세기 + 그립 상태 */}
+          <div className="absolute inset-x-5 bottom-5 flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-24 overflow-hidden rounded-full bg-white/20">
+                <span
+                  className="block h-full rounded-full bg-primary transition-[width] duration-200"
+                  style={{ width: `${swingPower * 100}%` }}
+                />
+              </span>
+              <span className="type-caption text-[10px] text-white/60">
+                {t("rally.hud.power")}
+              </span>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <span className="type-caption text-[10px] text-white/60">
+                {t("rally.hud.grip")}
+              </span>
               <span
-                className="block h-full rounded-full bg-primary transition-[width] duration-75"
-                style={{ width: `${Math.min(100, motionIntensity * 900)}%` }}
+                className="size-4 rounded-full border-2 transition-colors duration-200"
+                style={{
+                  borderColor: grip > 0.05 ? "#f24822" : "rgba(255,255,255,0.3)",
+                  background: `rgba(242,72,34,${grip * 0.8})`,
+                }}
               />
-            </span>
-            <span className="type-caption text-[10px] text-white/60">{t("rally.hud.motion")}</span>
+            </div>
           </div>
-
         </>
       )}
 
@@ -389,7 +450,8 @@ function RallyGame() {
           onExit={() => router.push("/insights")}
           onRetry={() => {
             spawnedRef.current.clear();
-            setBalls([]);
+            lastSpawnAtRef.current = -Infinity;
+            sceneRef.current?.reset();
             setScore(0);
             setCombo(0);
             setMaxCombo(0);
@@ -398,42 +460,6 @@ function RallyGame() {
           }}
         />
       )}
-    </div>
-  );
-}
-
-/** 원근감 있게 다가오는 공 — 남은 시간에 따라 커지고 아래로 내려온다 */
-function BallView({ ball, elapsed }: { ball: Ball; elapsed: number }) {
-  const remaining = ball.hitAt - elapsed;
-  // 2초 전 스폰 → 0에서 타격. progress 0(먼 곳) ~ 1(타격점)
-  const progress = Math.max(0, Math.min(1.3, 1 - remaining / 2));
-
-  if (ball.state === "missed" && progress > 1.2) return null;
-
-  // 공 크기는 화면의 짧은 변을 기준으로 잡아야 세로/가로 어느 쪽에서도
-  // 비슷한 비율로 보인다. vmin이 그 역할을 한다.
-  const size = 4 + progress * 18; // vmin
-  const top = 24 + progress * 58;
-  const left = 50 + (ball.lane - 0.5) * 62 * progress;
-  const hit = ball.state === "hit";
-
-  return (
-    <div
-      className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
-      style={{
-        left: `${left}%`,
-        top: `${top}%`,
-        opacity: hit ? 0 : ball.state === "missed" ? 0.25 : 1,
-        transition: hit ? "opacity 180ms ease, transform 180ms ease" : undefined,
-        transform: hit ? "translate(-50%,-50%) scale(1.8)" : undefined,
-      }}
-    >
-      <div
-        className={`rounded-full ${
-          ball.strong ? "bg-primary" : "bg-white"
-        } shadow-[0_0_24px_rgba(242,72,34,0.5)]`}
-        style={{ width: `${size}vmin`, height: `${size}vmin` }}
-      />
     </div>
   );
 }
@@ -475,6 +501,7 @@ function ReadyOverlay({
         <ul className="type-caption mt-5 space-y-1.5 text-[12px] text-white/70">
           <li>· {t("rally.ready.instructions.camera")}</li>
           <li>· {t("rally.ready.instructions.hand")}</li>
+          <li>· {t("rally.ready.instructions.reach")}</li>
           <li>· {t("rally.ready.instructions.hit")}</li>
           <li>· {t("rally.ready.instructions.strong")}</li>
         </ul>
