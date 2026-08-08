@@ -231,10 +231,20 @@ export const dictionary = {
     "callback.goBack": "돌아가기",
     "callback.connecting": "Spotify 연동 중…",
 
+    // 스플래시
+    "splash.tagline": "음악으로 치는 리듬 탁구",
+
+    // 온보딩 — 언어 선택
+    "onboarding.language.eyebrow": "언어 선택",
+    "onboarding.language.title": "어떤 언어로\n보여드릴까요?",
+    "onboarding.language.continue": "계속",
+
     // 온보딩
     "onboarding.skip": "건너뛰기",
     "onboarding.next": "다음",
     "onboarding.start": "시작하기",
+    "onboarding.kakaoStart": "카카오로 시작하기",
+    "onboarding.or": "또는",
     "onboarding.step0.eyebrow": "Rally에 오신 걸 환영해요",
     "onboarding.step0.title": "음악으로 치는\n리듬 탁구",
     "onboarding.step0.desc": "듣던 곡의 박자에 맞춰 랠리를 주고받는 XR 탁구 게임이에요.",
@@ -484,6 +494,16 @@ export const dictionary = {
     "settings.account.notLoggedIn": "Not logged in",
     "settings.account.kakaoLabel": "Kakao account",
     "settings.account.emailLabel": "Email account",
+
+    // Splash
+    "splash.tagline": "Table tennis, played to music",
+
+    // Onboarding — language picker
+    "onboarding.language.eyebrow": "Choose a language",
+    "onboarding.language.title": "Which language\nshould we use?",
+    "onboarding.language.continue": "Continue",
+    "onboarding.kakaoStart": "Continue with Kakao",
+    "onboarding.or": "or",
 
     // Spotify callback
     "callback.cancelled": "You cancelled the connection.",

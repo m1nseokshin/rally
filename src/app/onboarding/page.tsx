@@ -1,12 +1,14 @@
 "use client";
 
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useRouter } from "next/navigation";
 import { markOnboardingComplete } from "@/lib/onboarding";
 import { requestTransition } from "@/lib/transition";
 import { IconWave, IconPaddle, IconInsight, IconSpotify } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
-import type { DictKey } from "@/lib/i18n/dictionary";
+import { useAuth } from "@/lib/auth/useAuth";
+import { loginWithKakao } from "@/lib/kakao/auth";
+import type { DictKey, Locale } from "@/lib/i18n/dictionary";
 
 type Step = {
   eyebrowKey: DictKey;
@@ -51,12 +53,95 @@ const STEPS: Step[] = [
 const SWIPE_THRESHOLD_RATIO = 0.18;
 /** 첫/마지막 칸을 더 끌어당길 때 고무줄처럼 저항을 준다 */
 const OVERSCROLL_RESISTANCE = 0.35;
+/** 스플래시가 떠 있는 시간 */
+const SPLASH_MS = 2000;
+
+type Phase = "splash" | "language" | "steps";
 
 export default function OnboardingPage() {
+  const [phase, setPhase] = useState<Phase>("splash");
+
+  useEffect(() => {
+    const id = setTimeout(() => setPhase("language"), SPLASH_MS);
+    return () => clearTimeout(id);
+  }, []);
+
+  if (phase === "splash") return <Splash />;
+  if (phase === "language") return <LanguagePicker onContinue={() => setPhase("steps")} />;
+  return <StepsCarousel />;
+}
+
+/** 1) 스플래시 — 브랜드 워드마크만 잠깐 보여준다 */
+function Splash() {
+  const { t } = useLocale();
+  return (
+    <div className="pop-in flex h-full flex-col items-center justify-center bg-black">
+      <p className="type-display text-[56px] leading-none text-white">Rally</p>
+      <p className="type-caption mt-3 text-[13px] text-white/50">{t("splash.tagline")}</p>
+    </div>
+  );
+}
+
+/** 2) 언어 선택 — 온보딩 설명을 어떤 언어로 보여줄지 먼저 고른다 */
+function LanguagePicker({ onContinue }: { onContinue: () => void }) {
+  const { locale, setLocale, t } = useLocale();
+
+  const options: { value: Locale; label: string }[] = [
+    { value: "ko", label: "한국어" },
+    { value: "en", label: "English" },
+  ];
+
+  return (
+    <div className="page-in flex h-full flex-col justify-between bg-black p-6">
+      <div className="pt-[12dvh]">
+        <p className="type-eyebrow text-[12px] font-medium uppercase text-primary">
+          {t("onboarding.language.eyebrow")}
+        </p>
+        <h1 className="type-display mt-2 whitespace-pre-line text-[36px] leading-[1.05] text-white">
+          {t("onboarding.language.title")}
+        </h1>
+
+        <div className="mt-8 flex flex-col gap-3">
+          {options.map((opt) => {
+            const active = locale === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setLocale(opt.value)}
+                aria-pressed={active}
+                className={`tap flex h-14 items-center justify-between rounded-lg px-5 text-[16px] font-semibold ${
+                  active ? "bg-white text-black" : "bg-white/10 text-white"
+                }`}
+              >
+                {opt.label}
+                {active && <span className="text-[13px] font-medium">✓</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onContinue}
+        className="tap h-14 w-full rounded-lg bg-white text-[16px] font-semibold text-black"
+      >
+        {t("onboarding.language.continue")}
+      </button>
+    </div>
+  );
+}
+
+/** 3) 앱 설명 — 좌우 스와이프 가능한 캐러셀, 마지막 칸에서 시작하기/카카오 로그인 */
+function StepsCarousel() {
   const router = useRouter();
   const { t } = useLocale();
+  const { signInWithKakao } = useAuth();
   const [step, setStep] = useState(0);
   const isLast = step === STEPS.length - 1;
+  const [kakaoLoading, setKakaoLoading] = useState(false);
+  const [kakaoError, setKakaoError] = useState<string | null>(null);
 
   // 터치 드래그 — 실시간으로 손가락을 그대로 따라가다가(1:1), 손을 떼는
   // 순간에만 스냅 애니메이션을 켠다. dragX는 렌더 중 transform에 바로 반영해야
@@ -117,6 +202,19 @@ export default function OnboardingPage() {
   function next() {
     if (isLast) finish(true);
     else setStep((s) => s + 1);
+  }
+
+  async function startWithKakao() {
+    setKakaoError(null);
+    setKakaoLoading(true);
+    try {
+      const profile = await loginWithKakao();
+      signInWithKakao(profile);
+      finish(true);
+    } catch (e) {
+      setKakaoError(e instanceof Error ? e.message : t("login.kakao.missingKey"));
+      setKakaoLoading(false);
+    }
   }
 
   return (
@@ -202,7 +300,36 @@ export default function OnboardingPage() {
         >
           {isLast ? t("onboarding.start") : t("onboarding.next")}
         </button>
+
+        {/* 마지막 칸에서만 — 그냥 시작하기 대신 카카오로 로그인해서 시작할 수도 있다 */}
+        {isLast && (
+          <>
+            <div className="mt-4 flex items-center gap-3">
+              <span className="h-px flex-1 bg-white/15" />
+              <span className="text-[11px] font-medium text-white/40">{t("onboarding.or")}</span>
+              <span className="h-px flex-1 bg-white/15" />
+            </div>
+            <button
+              type="button"
+              onClick={startWithKakao}
+              disabled={kakaoLoading}
+              className="tap mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#FEE500] text-[14px] font-semibold text-[#191600] disabled:opacity-60"
+            >
+              <KakaoGlyph />
+              {t("onboarding.kakaoStart")}
+            </button>
+            {kakaoError && <p className="mt-2 text-[12px] text-primary">{kakaoError}</p>}
+          </>
+        )}
       </div>
     </div>
+  );
+}
+
+function KakaoGlyph() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="#191600">
+      <path d="M12 3C6.48 3 2 6.48 2 10.7c0 2.7 1.83 5.07 4.6 6.44-.2.73-.72 2.63-.83 3.04-.13.5.18.5.39.36.16-.11 2.6-1.77 3.66-2.49.7.1 1.42.15 2.18.15 5.52 0 10-3.48 10-7.5S17.52 3 12 3Z" />
+    </svg>
   );
 }
