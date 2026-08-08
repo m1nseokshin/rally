@@ -13,8 +13,14 @@ import {
   IconHeart,
 } from "@/components/icons";
 import { useSpotify } from "@/lib/spotify/useSpotify";
-import { useSpotifySearch } from "@/lib/spotify/useSpotifySearch";
+import { useTrackSource } from "@/lib/spotify/useTrackSource";
 import { MOODS } from "@/lib/spotify/moods";
+import {
+  activeFilterCount,
+  DEFAULT_FILTERS,
+  type Filters,
+} from "@/lib/spotify/filters";
+import TrackFilterSheet from "@/components/TrackFilterSheet";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useFavorites } from "@/lib/favorites/useFavorites";
 
@@ -25,37 +31,35 @@ export default function PlayPage() {
   const { t } = useLocale();
   const spotify = useSpotify();
   const [query, setQuery] = useState("");
-  // 선택한 장르(무드). null이면 내 취향(top tracks)을 보여준다.
-  const [moodId, setMoodId] = useState<string | null>(null);
-  // 같은 장르에서 다른 곡을 뽑기 위한 오프셋 — "다른 곡 보기"가 이걸 올린다
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [filterOpen, setFilterOpen] = useState(false);
+  // 같은 조건에서 다른 곡을 뽑기 위한 오프셋 — "다른 곡 보기"가 이걸 올린다
   const [shuffle, setShuffle] = useState(0);
 
   const typed = query.trim();
-  const mood = MOODS.find((m) => m.id === moodId) ?? null;
-  // 사용자가 직접 친 검색어가 항상 우선한다
-  const activeQuery = typed || mood?.query || "";
-  const search = useSpotifySearch(
-    activeQuery,
-    spotify.connected,
-    typed ? 0 : shuffle * 50,
-  );
+  // 검색어를 치면 자동으로 검색 소스로 전환한다 — 사용자가 필터를 먼저
+  // 열어 소스를 바꿔야 검색이 되는 건 말이 안 된다.
+  const effectiveFilters: Filters = typed ? { ...filters, source: "search" } : filters;
+  const source = useTrackSource(effectiveFilters, typed, spotify.connected, shuffle);
 
   // id가 아니라 트랙 객체 자체를 들고 있는다 — 검색 결과에서 고른 곡은
-  // top tracks 목록에 없어서, id로 목록을 다시 훑으면 선택이 사라진다.
+  // 목록에 없어서, id로 목록을 다시 훑으면 선택이 사라진다.
   const [selected, setSelected] = useState<Track | null>(null);
   // 목록에서 탭한 곡 — 확정 전 미리듣기 시트에 띄운다
   const [previewTrack, setPreviewTrack] = useState<Track | null>(null);
   const { favorites, toggleFavorite } = useFavorites();
 
-  const searching = activeQuery.length > 0;
-  const list = searching ? search.results : spotify.connected ? spotify.tracks : [];
+  const list = spotify.connected ? source.tracks : [];
+  const filterCount = activeFilterCount(effectiveFilters);
+  // 검색 소스인데 검색어도 장르도 없으면 뭘 보여줄지 정할 수 없다
+  const needsQuery =
+    effectiveFilters.source === "search" && !typed && !effectiveFilters.genre;
 
-  // top tracks가 막 로드됐고 아직 아무것도 안 골랐으면 첫 곡을 기본값으로.
-  // 분석 성공 여부와 무관하게 무엇이든 고를 수 있어야 한다 — Spotify의
-  // audio-features가 막혀 있는 계정/앱이면 전체가 "분석 대기 중"일 수 있는데,
-  // 그렇다고 곡을 아예 못 고르게 하면 안 된다.
+  // 아직 아무것도 안 골랐으면 목록 첫 곡을 기본값으로. 분석 성공 여부와
+  // 무관하게 무엇이든 고를 수 있어야 한다 — Spotify가 실제 BPM을 안 줘서
+  // 전부 "추정 템포"일 수 있는데, 그렇다고 곡을 못 고르게 하면 안 된다.
   // 이펙트로 setState하는 대신 파생값으로 계산해 불필요한 리렌더를 피한다.
-  const display = selected ?? (!searching ? spotify.tracks[0] : null) ?? null;
+  const display = selected ?? list[0] ?? null;
 
   const xr = devices.find((d) => d.kind === "xr")!;
 
@@ -123,21 +127,36 @@ export default function PlayPage() {
         </section>
       )}
 
-      {/* 장르 칩 — 내 취향 목록 대신 장르로 골라볼 수 있다.
-          직접 검색어를 치면 그게 우선하므로 이때는 칩을 비활성으로 보여준다 */}
+      {/* 필터 + 장르 빠른 선택 */}
       {spotify.connected && (
         <section className="mt-4">
           <div className="rail flex gap-2 overflow-x-auto px-6 pb-1">
-            <Chip active={!mood} disabled={!!typed} onClick={() => setMoodId(null)}>
+            <Chip active={filterCount > 0} onClick={() => setFilterOpen(true)}>
+              {t("play.filter.open")}
+              {filterCount > 0 && ` · ${filterCount}`}
+            </Chip>
+            <span className="my-1 w-px shrink-0 bg-hairline" />
+            <Chip
+              active={effectiveFilters.source !== "search"}
+              disabled={!!typed}
+              onClick={() => {
+                setFilters((f) => ({ ...f, source: "top_short", genre: null }));
+                setShuffle(0);
+              }}
+            >
               {t("play.mood.mine")}
             </Chip>
             {MOODS.map((m) => (
               <Chip
                 key={m.id}
-                active={mood?.id === m.id}
+                active={effectiveFilters.source === "search" && filters.genre === m.id}
                 disabled={!!typed}
                 onClick={() => {
-                  setMoodId(m.id === moodId ? null : m.id);
+                  setFilters((f) => ({
+                    ...f,
+                    source: "search",
+                    genre: f.genre === m.id ? null : m.id,
+                  }));
                   setShuffle(0);
                 }}
               >
@@ -148,44 +167,56 @@ export default function PlayPage() {
         </section>
       )}
 
-      {/* 목록 라벨 */}
-      {spotify.connected && !searching && list.length > 0 && (
-        <p className="type-caption mt-6 px-6 text-[12px] font-medium text-mute">
-          {t("play.list.aiLabel")}
-        </p>
-      )}
-      {spotify.connected && mood && !typed && list.length > 0 && (
-        <div className="mt-6 flex items-baseline justify-between px-6">
-          <p className="type-caption text-[12px] font-medium text-mute">
-            {t("play.mood.label", { count: list.length })}
+      {/* 목록 라벨 + 셔플 */}
+      {spotify.connected && list.length > 0 && (
+        <div className="mt-6 flex items-baseline justify-between gap-3 px-6">
+          <p className="type-caption min-w-0 text-[12px] font-medium text-mute">
+            {effectiveFilters.source === "search"
+              ? t("play.mood.label", { count: list.length })
+              : t("play.list.aiLabel")}
+            {source.hiddenCount > 0 &&
+              ` · ${t("play.filter.hidden", { count: source.hiddenCount })}`}
           </p>
-          <button
-            type="button"
-            onClick={() => setShuffle((s) => s + 1)}
-            className="tap text-[12px] font-medium text-primary underline underline-offset-4"
-          >
-            {t("play.mood.shuffle")}
-          </button>
+          {effectiveFilters.source === "search" && !typed && (
+            <button
+              type="button"
+              onClick={() => setShuffle((s) => s + 1)}
+              className="tap shrink-0 text-[12px] font-medium text-primary underline underline-offset-4"
+            >
+              {t("play.mood.shuffle")}
+            </button>
+          )}
         </div>
       )}
 
       {/* 트랙 목록 */}
       {!spotify.connected ? (
         <EmptyConnectState onConnect={spotify.connect} />
-      ) : searching && search.loading && list.length === 0 ? (
-        <div className="px-6 py-10 text-center">
-          <span className="mx-auto block size-6 animate-spin rounded-full border-2 border-hairline border-t-primary" />
-          <p className="type-caption mt-3 text-[13px] text-mute">{t("play.search.loading")}</p>
-        </div>
-      ) : searching && list.length === 0 ? (
+      ) : needsQuery ? (
         <p className="type-caption px-6 py-10 text-center text-[13px] text-mute">
-          {t("play.search.empty")}
+          {t("play.filter.needQuery")}
         </p>
-      ) : !searching && spotify.loading && list.length === 0 ? (
+      ) : source.error === "recent_scope" ? (
+        <div className="px-6 py-10 text-center">
+          <p className="type-caption text-[13px] text-mute">{t("play.filter.recentScope")}</p>
+          <button
+            type="button"
+            onClick={spotify.connect}
+            className="tap mt-4 inline-flex h-11 items-center gap-2 rounded-lg bg-ink px-6 text-[14px] font-semibold text-canvas"
+          >
+            <IconSpotify size={16} />
+            {t("play.empty.cta")}
+          </button>
+        </div>
+      ) : source.loading && list.length === 0 ? (
         <div className="px-6 py-10 text-center">
           <span className="mx-auto block size-6 animate-spin rounded-full border-2 border-hairline border-t-primary" />
           <p className="type-caption mt-3 text-[13px] text-mute">{t("play.list.loading")}</p>
         </div>
+      ) : list.length === 0 ? (
+        <p className="type-caption px-6 py-10 text-center text-[13px] text-mute">
+          {source.hiddenCount > 0 ? t("play.filter.empty") : t("play.search.empty")}
+        </p>
       ) : (
         <ul className="mt-2 border-t border-hairline-soft">
           {list.map((track) => (
@@ -329,6 +360,17 @@ export default function PlayPage() {
             setPreviewTrack(null);
           }}
           onClose={() => setPreviewTrack(null)}
+        />
+      )}
+
+      {filterOpen && (
+        <TrackFilterSheet
+          filters={filters}
+          onChange={(next) => {
+            setFilters(next);
+            setShuffle(0);
+          }}
+          onClose={() => setFilterOpen(false)}
         />
       )}
     </div>

@@ -22,6 +22,8 @@ export type Track = {
   image?: string;
   /** 30초 미리듣기 mp3 — Spotify가 신규 앱엔 제공하지 않는 경우가 많다 */
   previewUrl?: string;
+  /** 발매 연도 — 연도 필터에 쓴다. Spotify 연동 트랙에만 있다. */
+  year?: number;
 };
 
 export type Device = {

@@ -13,6 +13,10 @@ const VERIFIER_KEY = "rally_spotify_verifier";
 const SCOPES = [
   "user-top-read",
   "user-library-read",
+  // 최근 재생 목록 필터용. 이 스코프가 추가되기 전에 연동한 토큰엔 없어서
+  // /me/player/recently-played가 403을 낸다 — 호출부가 그 경우 빈 목록으로
+  // 흘려보내고 다른 소스를 쓰도록 안내한다(재연동하면 해결).
+  "user-read-recently-played",
   "user-read-email",
   "user-read-private",
   "streaming",

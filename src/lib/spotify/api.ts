@@ -42,7 +42,7 @@ type SpotifyApiTrack = {
   name: string;
   duration_ms: number;
   artists: { name: string }[];
-  album: { images: { url: string }[] };
+  album: { images: { url: string }[]; release_date?: string };
   preview_url: string | null;
 };
 
@@ -117,18 +117,46 @@ function toTrack(t: SpotifyApiTrack): Track {
     cover: ["#f24822", "#ffb199"],
     image: t.album.images[0]?.url,
     previewUrl: t.preview_url ?? undefined,
+    // release_date는 "2024", "2024-03", "2024-03-15" 중 아무 형태나 온다 —
+    // 앞 4자리만 쓰면 셋 다 안전하게 처리된다
+    year: t.album.release_date
+      ? Number(t.album.release_date.slice(0, 4)) || undefined
+      : undefined,
   };
 }
 
-export async function fetchTopTracks(limit = 50): Promise<Track[]> {
-  const data = await spotifyFetch(`/me/top/tracks?limit=${limit}&time_range=short_term`);
+export type TopRange = "short_term" | "medium_term" | "long_term";
+
+export async function fetchTopTracks(
+  limit = 50,
+  range: TopRange = "short_term",
+): Promise<Track[]> {
+  const data = await spotifyFetch(`/me/top/tracks?limit=${limit}&time_range=${range}`);
   const items: SpotifyApiTrack[] = data.items ?? [];
   if (items.length === 0) {
     // 최근 청취 이력이 없으면 저장한 곡으로 폴백
-    const saved = await spotifyFetch(`/me/tracks?limit=${limit}`);
-    return (saved.items ?? []).map((it: { track: SpotifyApiTrack }) => toTrack(it.track));
+    return fetchSavedTracks(limit);
   }
   return items.map(toTrack);
+}
+
+/** 라이브러리에 저장(하트)한 곡 */
+export async function fetchSavedTracks(limit = 50): Promise<Track[]> {
+  const data = await spotifyFetch(`/me/tracks?limit=${limit}`);
+  return (data.items ?? []).map((it: { track: SpotifyApiTrack }) => toTrack(it.track));
+}
+
+/** 최근 재생한 곡 — 같은 곡이 여러 번 들어오므로 id로 중복을 제거한다 */
+export async function fetchRecentTracks(limit = 50): Promise<Track[]> {
+  const data = await spotifyFetch(`/me/player/recently-played?limit=${limit}`);
+  const seen = new Set<string>();
+  const out: Track[] = [];
+  for (const it of (data.items ?? []) as { track: SpotifyApiTrack }[]) {
+    if (!it.track || seen.has(it.track.id)) continue;
+    seen.add(it.track.id);
+    out.push(toTrack(it.track));
+  }
+  return out;
 }
 
 /** Spotify 검색 한 페이지 최대치. 이보다 크게 요청하면 400이 난다. */
