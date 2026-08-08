@@ -7,6 +7,7 @@ import { requestTransition } from "@/lib/transition";
 import { IconWave, IconPaddle, IconInsight, IconSpotify } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { startKakaoLogin } from "@/lib/kakao/auth";
+import KakaoLoginButton from "@/components/KakaoLoginButton";
 import type { DictKey, Locale } from "@/lib/i18n/dictionary";
 
 type Step = {
@@ -54,27 +55,51 @@ const SWIPE_THRESHOLD_RATIO = 0.18;
 const OVERSCROLL_RESISTANCE = 0.35;
 /** 스플래시가 떠 있는 시간 */
 const SPLASH_MS = 2000;
+/** 스플래시 → 언어 → 앱 설명, 세 구간 사이를 좌우로 넘길 때 걸리는 시간 */
+const PHASE_TRANSITION_MS = 600;
 
-type Phase = "splash" | "language" | "steps";
+const PHASES = ["splash", "language", "steps"] as const;
 
 export default function OnboardingPage() {
-  const [phase, setPhase] = useState<Phase>("splash");
+  // 스플래시 → 언어 선택 → 앱 설명을 하나의 가로 트랙에 나란히 두고
+  // translateX로 넘긴다 — 세 구간을 오갈 때마다 뚝 끊기지 않고 한 화면이
+  // 옆으로 밀려나면서 다음 화면이 들어오는 느낌을 준다.
+  const [phaseIndex, setPhaseIndex] = useState(0);
 
   useEffect(() => {
-    const id = setTimeout(() => setPhase("language"), SPLASH_MS);
+    const id = setTimeout(() => setPhaseIndex(1), SPLASH_MS);
     return () => clearTimeout(id);
   }, []);
 
-  if (phase === "splash") return <Splash />;
-  if (phase === "language") return <LanguagePicker onContinue={() => setPhase("steps")} />;
-  return <StepsCarousel />;
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-black">
+      <div
+        className="flex h-full"
+        style={{
+          width: `${PHASES.length * 100}%`,
+          transform: `translateX(-${(phaseIndex * 100) / PHASES.length}%)`,
+          transition: `transform ${PHASE_TRANSITION_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`,
+        }}
+      >
+        <div className="h-full" style={{ width: `${100 / PHASES.length}%` }}>
+          <Splash />
+        </div>
+        <div className="h-full" style={{ width: `${100 / PHASES.length}%` }}>
+          <LanguagePicker onContinue={() => setPhaseIndex(2)} />
+        </div>
+        <div className="h-full" style={{ width: `${100 / PHASES.length}%` }}>
+          <StepsCarousel />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /** 1) 스플래시 — 브랜드 워드마크만 잠깐 보여준다 */
 function Splash() {
   const { t } = useLocale();
   return (
-    <div className="pop-in flex h-full flex-col items-center justify-center bg-black">
+    <div className="flex h-full flex-col items-center justify-center bg-black">
       <p className="type-display text-[56px] leading-none text-white">Rally</p>
       <p className="type-caption mt-3 text-[13px] text-white/50">{t("splash.tagline")}</p>
     </div>
@@ -91,7 +116,7 @@ function LanguagePicker({ onContinue }: { onContinue: () => void }) {
   ];
 
   return (
-    <div className="page-in flex h-full flex-col justify-between bg-black p-6">
+    <div className="flex h-full flex-col justify-between bg-black p-6">
       <div className="pt-[12dvh]">
         <p className="type-eyebrow text-[12px] font-medium uppercase text-primary">
           {t("onboarding.language.eyebrow")}
@@ -307,15 +332,9 @@ function StepsCarousel() {
               <span className="text-[11px] font-medium text-white/40">{t("onboarding.or")}</span>
               <span className="h-px flex-1 bg-white/15" />
             </div>
-            <button
-              type="button"
-              onClick={startWithKakao}
-              disabled={kakaoLoading}
-              className="tap mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#FEE500] text-[14px] font-semibold text-[#191600] disabled:opacity-60"
-            >
-              <KakaoGlyph />
-              {t("onboarding.kakaoStart")}
-            </button>
+            <div className="mt-4">
+              <KakaoLoginButton onClick={startWithKakao} disabled={kakaoLoading} />
+            </div>
             {kakaoError && <p className="mt-2 text-[12px] text-primary">{kakaoError}</p>}
           </>
         )}
@@ -324,10 +343,3 @@ function StepsCarousel() {
   );
 }
 
-function KakaoGlyph() {
-  return (
-    <svg width={16} height={16} viewBox="0 0 24 24" fill="#191600">
-      <path d="M12 3C6.48 3 2 6.48 2 10.7c0 2.7 1.83 5.07 4.6 6.44-.2.73-.72 2.63-.83 3.04-.13.5.18.5.39.36.16-.11 2.6-1.77 3.66-2.49.7.1 1.42.15 2.18.15 5.52 0 10-3.48 10-7.5S17.52 3 12 3Z" />
-    </svg>
-  );
-}

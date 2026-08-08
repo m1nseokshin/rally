@@ -7,6 +7,7 @@ import { IconBack } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useAuth } from "@/lib/auth/useAuth";
 import { startKakaoLogin } from "@/lib/kakao/auth";
+import KakaoLoginButton from "@/components/KakaoLoginButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -71,15 +72,7 @@ export default function LoginPage() {
       <PageHeader eyebrow={t("login.eyebrow")} title={t("login.title")} desc={t("login.desc")} />
 
       <section className="px-6">
-        <button
-          type="button"
-          onClick={handleKakao}
-          disabled={kakaoLoading}
-          className="tap flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#FEE500] text-[15px] font-semibold text-[#191600] disabled:opacity-60"
-        >
-          <KakaoGlyph />
-          {t("login.kakao")}
-        </button>
+        <KakaoLoginButton onClick={handleKakao} disabled={kakaoLoading} />
 
         <div className="my-6 flex items-center gap-3">
           <span className="h-px flex-1 bg-hairline-soft" />
@@ -159,13 +152,5 @@ function Field({
         style={{ borderRadius: "var(--radius-input)" }}
       />
     </label>
-  );
-}
-
-function KakaoGlyph() {
-  return (
-    <svg width={18} height={18} viewBox="0 0 24 24" fill="#191600">
-      <path d="M12 3C6.48 3 2 6.48 2 10.7c0 2.7 1.83 5.07 4.6 6.44-.2.73-.72 2.63-.83 3.04-.13.5.18.5.39.36.16-.11 2.6-1.77 3.66-2.49.7.1 1.42.15 2.18.15 5.52 0 10-3.48 10-7.5S17.52 3 12 3Z" />
-    </svg>
   );
 }
