@@ -161,7 +161,7 @@ body {
   }
 }
 .page-in {
-  animation: page-in 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: page-in 2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 바텀시트 — 아래에서 슬라이드 업 */
