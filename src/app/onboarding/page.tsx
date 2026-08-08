@@ -6,8 +6,7 @@ import { markOnboardingComplete } from "@/lib/onboarding";
 import { requestTransition } from "@/lib/transition";
 import { IconWave, IconPaddle, IconInsight, IconSpotify } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
-import { useAuth } from "@/lib/auth/useAuth";
-import { loginWithKakao } from "@/lib/kakao/auth";
+import { startKakaoLogin } from "@/lib/kakao/auth";
 import type { DictKey, Locale } from "@/lib/i18n/dictionary";
 
 type Step = {
@@ -137,7 +136,6 @@ function LanguagePicker({ onContinue }: { onContinue: () => void }) {
 function StepsCarousel() {
   const router = useRouter();
   const { t } = useLocale();
-  const { signInWithKakao } = useAuth();
   const [step, setStep] = useState(0);
   const isLast = step === STEPS.length - 1;
   const [kakaoLoading, setKakaoLoading] = useState(false);
@@ -208,9 +206,9 @@ function StepsCarousel() {
     setKakaoError(null);
     setKakaoLoading(true);
     try {
-      const profile = await loginWithKakao();
-      signInWithKakao(profile);
-      finish(true);
+      // 카카오 로그인 화면으로 전체 페이지가 이동한다 — 온보딩 완료 처리와
+      // 홈 화면 슬라이드업 전환은 돌아온 뒤 /callback/kakao에서 이어서 한다.
+      await startKakaoLogin("onboarding");
     } catch (e) {
       setKakaoError(e instanceof Error ? e.message : t("login.kakao.missingKey"));
       setKakaoLoading(false);

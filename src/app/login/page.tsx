@@ -6,12 +6,12 @@ import { PageHeader, PillButton } from "@/components/ui";
 import { IconBack } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useAuth } from "@/lib/auth/useAuth";
-import { loginWithKakao } from "@/lib/kakao/auth";
+import { startKakaoLogin } from "@/lib/kakao/auth";
 
 export default function LoginPage() {
   const router = useRouter();
   const { t } = useLocale();
-  const { signInWithEmail, signUpWithEmail, signInWithKakao } = useAuth();
+  const { signInWithEmail, signUpWithEmail } = useAuth();
 
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [id, setId] = useState("");
@@ -24,12 +24,11 @@ export default function LoginPage() {
     setError(null);
     setKakaoLoading(true);
     try {
-      const profile = await loginWithKakao();
-      signInWithKakao(profile);
-      router.push("/settings");
+      // 카카오 로그인 화면으로 전체 페이지가 이동한다 — 성공/실패 처리는
+      // 돌아온 뒤 /callback/kakao 페이지에서 이어서 한다.
+      await startKakaoLogin("login");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("login.kakao.missingKey"));
-    } finally {
       setKakaoLoading(false);
     }
   }
