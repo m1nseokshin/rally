@@ -7,6 +7,7 @@ import {
   fetchSavedTracks,
   fetchTopTracks,
   searchTracks,
+  SEARCH_PAGE_MAX,
   type TopRange,
 } from "./api";
 import { applyClientFilters, buildSearchQuery, type Filters } from "./filters";
@@ -68,7 +69,11 @@ export function useTrackSource(
       }
 
       setLoading(true);
-      const offset = shuffle * 50;
+      // 검색은 한 페이지가 10곡이고 장르 하나로 파낼 수 있는 총량도 50곡 언저리다.
+      // 여기서 50씩 밀면 두 번째 "다른 곡 보기"부터는 결과 범위 밖이라 빈 응답이
+      // 오고, searchTracks가 처음으로 되감아 같은 목록이 다시 나온다.
+      // 한 페이지씩만 밀어야 실제로 곡이 바뀐다.
+      const offset = shuffle * SEARCH_PAGE_MAX;
       const run = isSearch
         ? searchTracks(query, 50, offset)
         : source === "saved"

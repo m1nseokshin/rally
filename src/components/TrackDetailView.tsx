@@ -36,7 +36,7 @@ export default function TrackDetailView({
 
   function handleClose() {
     setClosing(true);
-    setTimeout(onClose, 280); // .detail-out 길이와 맞춘다
+    setTimeout(onClose, 280); // .overlay-out 길이와 맞춘다
   }
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function TrackDetailView({
   return (
     <div
       className={`absolute inset-0 z-40 flex flex-col bg-canvas ${
-        closing ? "detail-out" : "detail-in"
+        closing ? "overlay-out" : "overlay-in"
       }`}
     >
       {/* 상단 커버 */}

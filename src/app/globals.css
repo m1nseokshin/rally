@@ -481,6 +481,25 @@ body {
   background: var(--color-canvas);
 }
 
+/*
+  같은 슬라이드 연출을 라우트가 아니라 **오버레이**에 쓸 때(곡 상세 전체화면).
+
+  위 .detail-in/.detail-out은 라우트 전체가 문서 흐름 안에서 밀려 들어오는
+  것이라 position: relative를 같이 건다. 그런데 오버레이는 스스로
+  `absolute inset-0`으로 화면을 덮는다. 그 클래스를 그대로 재사용하면 여기
+  relative가 Tailwind의 absolute를 이겨버린다 — 레이어 없는 CSS가
+  @layer utilities보다 강해서다. 그러면 오버레이가 화면을 덮지 않고 목록
+  맨 끝에 그냥 이어붙어, 눌러도 아무 일도 안 일어나는 것처럼 보인다.
+  실제로 그 버그가 났었다. 그래서 위치는 건드리지 않고 애니메이션만 주는
+  짝을 따로 둔다.
+*/
+.overlay-in {
+  animation: detail-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.overlay-out {
+  animation: detail-out 280ms cubic-bezier(0.4, 0, 0.7, 0.2) forwards;
+}
+
 /* 온보딩 "시작하기"처럼, 화면 전체가 하단에서 스윽 올라와 이전 화면을
    덮는 큰 전환. 탭 이동의 미묘한 page-in과 달리 1초짜리 뚜렷한 연출이라
    별도 클래스로 뺐다(lib/transition.ts가 1회성으로 트리거). */
@@ -509,6 +528,8 @@ body {
   .results-in,
   .detail-in,
   .detail-out,
+  .overlay-in,
+  .overlay-out,
   .bar-grow,
   .stagger > *,
   .page-stagger > * > * {

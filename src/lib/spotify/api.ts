@@ -171,33 +171,70 @@ export async function fetchRecentTracks(limit = 50): Promise<Track[]> {
   return out;
 }
 
-/** Spotify 검색 한 페이지 최대치. 이보다 크게 요청하면 400이 난다. */
-export const SEARCH_PAGE_MAX = 50;
+/**
+ * Spotify 검색 한 페이지 최대치.
+ *
+ * 문서상으로는 50인데 이 앱 등급에서는 **11 이상이면 `Invalid limit` 400**이
+ * 떨어진다(/me/top/tracks 같은 다른 엔드포인트는 50이 그대로 통한다).
+ * 그래서 검색만 따로 10으로 묶고, 모자란 만큼은 offset을 밀어 여러 페이지를
+ * 받아 채운다.
+ */
+export const SEARCH_PAGE_MAX = 10;
+
+/** 검색 한 번에 채우려는 곡 수 — 페이지를 몇 장 받을지가 여기서 정해진다 */
+const SEARCH_TARGET = 50;
 
 /**
- * 곡 검색 — 요청 한 번이면 끝난다.
+ * 곡 검색.
  *
- * query는 Spotify 검색 문법 그대로라 무드 프리셋의 `genre:"k-pop"` 같은
- * 필터도 그대로 넘길 수 있다. offset은 같은 무드에서 매번 다른 곡을
- * 뽑기 위한 것 — 안 그러면 새로고침해도 항상 같은 상위 50곡만 나온다.
+ * 한 페이지가 10곡뿐이라 목표 수를 채우려면 여러 장을 받아야 한다. 페이지는
+ * offset이 미리 정해져 있으니 순차로 기다릴 이유가 없어 병렬로 던진다
+ * (5개 정도는 레이트 리밋에 걸리지 않는다 — 예전에 곡마다 audio-features를
+ * 부르다 429를 맞은 것과는 규모가 다르다).
+ *
+ * 같은 곡이 페이지 경계에서 겹쳐 오는 경우가 있어 id로 중복을 제거한다.
  */
 export async function searchTracks(
   query: string,
-  limit = SEARCH_PAGE_MAX,
+  limit = SEARCH_TARGET,
   offset = 0,
 ): Promise<Track[]> {
   const q = query.trim();
   if (!q) return [];
-  const capped = Math.min(limit, SEARCH_PAGE_MAX);
-  const data = await spotifyFetch(
-    `/search?type=track&limit=${capped}&offset=${offset}&q=${encodeURIComponent(q)}`,
-  );
-  const items: SpotifyApiTrack[] = data.tracks?.items ?? [];
 
-  // offset이 결과 수를 넘어서면 빈 배열이 온다 — 그땐 처음부터 다시 받아
-  // "새로고침했더니 목록이 사라졌다"는 상황을 막는다.
-  if (items.length === 0 && offset > 0) {
-    return searchTracks(query, capped, 0);
+  const pages = Math.max(1, Math.ceil(limit / SEARCH_PAGE_MAX));
+  const encoded = encodeURIComponent(q);
+
+  const results = await Promise.all(
+    Array.from({ length: pages }, (_, i) =>
+      spotifyFetch(
+        `/search?type=track&limit=${SEARCH_PAGE_MAX}&offset=${
+          offset + i * SEARCH_PAGE_MAX
+        }&q=${encoded}`,
+      ).catch(() => null),
+    ),
+  );
+
+  // 한 장도 못 받았으면 인증 문제일 수 있으니 조용히 빈 목록으로 넘기지 않는다
+  if (results.every((r) => r === null)) {
+    throw new Error("Spotify 검색에 실패했어요.");
   }
-  return items.map(toTrack);
+
+  const seen = new Set<string>();
+  const out: Track[] = [];
+  for (const data of results) {
+    const items: SpotifyApiTrack[] = data?.tracks?.items ?? [];
+    for (const it of items) {
+      if (!it || seen.has(it.id)) continue;
+      seen.add(it.id);
+      out.push(toTrack(it));
+    }
+  }
+
+  // offset이 결과 범위를 넘어서면 아무것도 안 온다 — 그땐 처음부터 다시 받아
+  // "다른 곡 보기를 눌렀더니 목록이 사라졌다"는 상황을 막는다.
+  if (out.length === 0 && offset > 0) {
+    return searchTracks(query, limit, 0);
+  }
+  return out;
 }
