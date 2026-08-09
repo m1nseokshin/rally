@@ -20,7 +20,7 @@ import {
 } from "@/lib/rally/rallyConfig";
 import { createTableWireframe } from "@/lib/rally/scene/table";
 import { createPaddle } from "@/lib/rally/scene/paddle";
-import { createBallPool } from "@/lib/rally/scene/ballPool";
+import { createBallPool, JUDGE_COLOR, type JudgeKey } from "@/lib/rally/scene/ballPool";
 import { createHitBurst } from "@/lib/rally/scene/hitBurst";
 import { ballPosition, planBall } from "@/lib/rally/scene/trajectory";
 
@@ -39,6 +39,12 @@ export type RallySceneHandle = {
    * 반드시 동기여야 한다.
    */
   swing: (power: number, source: "hand" | "motion") => SwingOutcome;
+  /**
+   * 타이밍 판정이 나온 뒤 곧바로 호출한다 — 방금 쳐낸 공과 타격 이펙트를
+   * 그 판정 색으로 물들인다. swing() 시점엔 아직 판정을 모르기 때문에
+   * (비트 엔진이 page.tsx에 있다) 두 단계로 나눠 뒀다.
+   */
+  judge: (result: JudgeKey, power: number) => void;
   reset: () => void;
 };
 
@@ -101,6 +107,7 @@ const RallyScene = forwardRef<RallySceneHandle, Props>(function RallyScene(
   const apiRef = useRef<{
     spawn: (b: { id: number; hitAt: number; strong: boolean; lane: number }) => void;
     swing: (power: number, source: "hand" | "motion") => SwingOutcome;
+    judge: (result: JudgeKey, power: number) => void;
     reset: () => void;
   } | null>(null);
 
@@ -108,6 +115,7 @@ const RallyScene = forwardRef<RallySceneHandle, Props>(function RallyScene(
     spawnBall: (b) => apiRef.current?.spawn(b),
     swing: (power, source) =>
       apiRef.current?.swing(power, source) ?? { ballId: null, offset: 0, contact: "none" },
+    judge: (result, power) => apiRef.current?.judge(result, power),
     reset: () => apiRef.current?.reset(),
   }));
 
@@ -161,6 +169,8 @@ const RallyScene = forwardRef<RallySceneHandle, Props>(function RallyScene(
     let paddleRoll = 0;
 
     const tmp = { x: 0, y: 0, z: 0 };
+    // 방금 쳐낸 공 — 판정이 나오면 이 슬롯을 그 색으로 물들인다
+    let lastHit: (typeof pool.slots)[number] | null = null;
 
     const resize = () => {
       const w = mount.clientWidth;
@@ -215,6 +225,7 @@ const RallyScene = forwardRef<RallySceneHandle, Props>(function RallyScene(
 
         if (contact === "none") {
           // 헛스윙 — 공은 그대로 날아가 미스로 처리된다
+          lastHit = null;
           return { ballId: best.plan.id, offset: dx, contact };
         }
 
@@ -229,13 +240,21 @@ const RallyScene = forwardRef<RallySceneHandle, Props>(function RallyScene(
         best.vel.set(vx, speed * Math.sin(up), -speed * Math.cos(up));
         best.state = "hit";
         best.age = 0;
+        lastHit = best;
         burst.fire(best.pos, power);
 
         return { ballId: best.plan.id, offset: dx, contact };
       },
 
+      judge: (result, power) => {
+        // 스매시(퍼펙트 + 풀스윙)는 같은 오렌지지만 더 크게 터진다
+        burst.setColor(JUDGE_COLOR[result], result === "perfect" && power > 0.8 ? 1.6 : 1);
+        if (lastHit?.active) pool.judge(lastHit, result);
+      },
+
       reset: () => {
         pool.releaseAll();
+        lastHit = null;
         swingEnergy = 0;
       },
     };
@@ -312,6 +331,7 @@ const RallyScene = forwardRef<RallySceneHandle, Props>(function RallyScene(
           ballPosition(s.plan, t, tmp);
           s.mesh.position.set(tmp.x, tmp.y, tmp.z);
           s.glow.position.copy(s.mesh.position);
+          s.trail.push(tmp.x, tmp.y, tmp.z);
           placeShadow(s, tmp.x, tmp.y, tmp.z);
 
           if (t > s.plan.hitAt + 0.3) {
@@ -320,6 +340,8 @@ const RallyScene = forwardRef<RallySceneHandle, Props>(function RallyScene(
             // 놓친 공은 그대로 나를 지나쳐 간다
             s.vel.set(s.plan.bV[0], s.plan.bV[1] - GRAVITY * 0.3, s.plan.bV[2]);
             s.age = 0;
+            // 지나쳐 가는 공도 색으로 결과를 말해준다 — 흐린 회색으로 식는다
+            pool.judge(s, "miss");
             if (!s.reported) {
               s.reported = true;
               onBallMissedRef.current?.(s.plan.id);
@@ -347,6 +369,7 @@ const RallyScene = forwardRef<RallySceneHandle, Props>(function RallyScene(
 
         s.mesh.position.copy(s.pos);
         s.glow.position.copy(s.pos);
+        s.trail.push(s.pos.x, s.pos.y, s.pos.z);
         placeShadow(s, s.pos.x, s.pos.y, s.pos.z);
         if (s.state === "missed") {
           const fade = clamp(1 - s.age / 0.9, 0, 1);

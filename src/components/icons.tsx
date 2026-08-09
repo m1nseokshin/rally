@@ -24,6 +24,12 @@ export const IconPlay = ({ className, size }: P) => (
   </svg>
 );
 
+export const IconStop = ({ className, size }: P) => (
+  <svg {...base(size)} className={className}>
+    <rect x="6.5" y="6.5" width="11" height="11" rx="1.5" />
+  </svg>
+);
+
 export const IconWave = ({ className, size }: P) => (
   <svg {...base(size)} className={className}>
     <path d="M4 12v0" />

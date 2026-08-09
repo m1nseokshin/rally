@@ -159,6 +159,29 @@ body {
   opacity: 0.6;
 }
 
+/*
+  마우스를 올리면 커지는 버튼 — XR 화면의 멈추기처럼 포인터로 조작할 때
+  "여기가 눌린다"를 먼저 알려야 하는 컨트롤에 쓴다.
+
+  .tap을 쓰지 않는 이유: .tap의 520ms는 손가락으로 눌렀다 뗀 뒤의 여운을
+  위한 값이라, 마우스를 스치듯 지나가는 hover에 걸면 커지다 말고 되돌아간다.
+  hover 자체도 (hover: hover)로 막아 둔다 — 터치 기기에서는 탭이 hover로
+  잡혀서 손을 떼도 커진 채로 남는다.
+*/
+.hover-grow {
+  transition:
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 180ms ease;
+}
+@media (hover: hover) {
+  .hover-grow:hover {
+    transform: scale(1.18);
+  }
+}
+.hover-grow:active {
+  transform: scale(0.94);
+}
+
 /* 필터 칩 — 누르면 눌렸다가 스프링처럼 튀어 돌아온다. .tap의 밋밋한 ease
    대신 오버슈트가 있는 곡선을 써서 "선택했다"는 감각을 준다. 색 전환은
    따로 길게 잡아, 선택 상태가 뒤늦게 부드럽게 채워지도록 했다. */

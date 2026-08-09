@@ -188,11 +188,6 @@ export default function TrackDetailView({
           </span>
         </div>
 
-        {!track.analyzed && (
-          <p className="type-caption mt-4 text-[11px] leading-relaxed text-stone">
-            {t("play.analysis.noAnalysisDesc")}
-          </p>
-        )}
       </div>
 
       {/* 하단 액션 */}

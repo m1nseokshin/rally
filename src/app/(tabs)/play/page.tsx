@@ -8,7 +8,6 @@ import {
   IconSpotify,
   IconCheck,
   IconPlay,
-  IconWave,
   IconSearch,
   IconHeart,
 } from "@/components/icons";
@@ -352,68 +351,6 @@ export default function PlayPage() {
         </ul>
       )}
 
-      {/* 분석 결과 */}
-      {display && (
-        <section className="mt-9 px-6">
-          <div className="mb-3 flex items-center gap-2">
-            <IconWave size={17} className="text-primary" />
-            <h2 className="text-[16px] font-semibold text-ink">{t("play.analysis.title")}</h2>
-          </div>
-
-          {/* 항상 어두운 분석 패널 — 다크모드 토큰과 무관하게 리터럴 black/white */}
-          <div className="bg-black p-5" style={{ borderRadius: "var(--radius-panel)" }}>
-            <p className="type-eyebrow text-[12px] font-medium uppercase text-primary">
-              {t("play.analysis.rallyPoints", { count: display.hits.length })}
-            </p>
-            <h3 className="type-display mt-2 text-[30px] text-white">{display.title}</h3>
-
-            {/* 파형 + 히트 마커 — 이제 모든 곡이 랠리 포인트를 갖는다 */}
-            <div className="relative mt-6 h-24">
-              <div className="flex h-full items-center gap-[2px]">
-                {Array.from({ length: 46 }, (_, i) => {
-                  const pos = i / 45;
-                  const near = display.hits.some((h) => Math.abs(h - pos) < 0.018);
-                  const height = near ? 100 : 22 + Math.abs(Math.sin(i * 1.7)) * 42;
-                  return (
-                    <span
-                      key={i}
-                      className={`flex-1 rounded-full ${near ? "bg-primary" : "bg-white/25"}`}
-                      style={{ height: `${height}%` }}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-3 gap-3 border-t border-white/15 pt-4">
-              <Metric
-                label={t("play.metric.bpm")}
-                value={
-                  display.analyzed
-                    ? String(display.bpm)
-                    : `${display.bpm} · ${t("play.metric.bpmDefault")}`
-                }
-              />
-              <Metric
-                label={t("play.metric.difficulty")}
-                value={`${display.difficulty} / 5`}
-              />
-              <Metric
-                label={t("play.metric.length")}
-                value={formatDuration(display.duration)}
-              />
-            </div>
-
-            {/* 실측이 아니라 추정이라는 사실을 숨기지 않는다 */}
-            {!display.analyzed && (
-              <p className="type-caption mt-4 text-[12px] leading-relaxed text-white/40">
-                {t("play.analysis.noAnalysisDesc")}
-              </p>
-            )}
-          </div>
-        </section>
-      )}
-
       {/* XR 전송 */}
       <section className="mt-8 px-6">
         <div className="flex items-center justify-between border-y border-hairline-soft py-4">
@@ -573,17 +510,6 @@ function TrackCover({ track }: { track: Track }) {
         background: `linear-gradient(150deg, ${track.cover[0]} 0%, ${track.cover[1]} 100%)`,
       }}
     />
-  );
-}
-
-// 이 컴포넌트는 위 항상-어두운 패널 안에서만 쓰인다 — 그래서 텍스트도
-// 테마 토큰이 아니라 리터럴 white를 쓴다.
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[11px] font-medium text-white/50">{label}</p>
-      <p className="mt-1 text-[15px] font-semibold text-white tabular-nums">{value}</p>
-    </div>
   );
 }
 

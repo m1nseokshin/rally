@@ -39,10 +39,17 @@ export function createHitBurst(scene: THREE.Scene) {
     fire(at: THREE.Vector3, power: number) {
       origin.copy(at);
       scale = 1 + power * 0.6;
-      material.color.setHex(power > 0.8 ? 0xf24822 : 0xffffff);
+      // 색은 일단 중립으로 두고, 타이밍 판정이 나오면 setColor로 덮어쓴다.
+      // 판정은 비트 엔진이 쥐고 있어서 쳐낸 순간엔 아직 모른다.
+      material.color.setHex(0xffffff);
       t = 0;
       active = true;
       lines.visible = true;
+    },
+    /** 판정이 나온 뒤 같은 틱에 불린다 — 다음 프레임엔 이미 그 색으로 그려진다 */
+    setColor(hex: number, boost = 1) {
+      material.color.setHex(hex);
+      scale *= boost;
     },
     update(dt: number) {
       if (!active) return;

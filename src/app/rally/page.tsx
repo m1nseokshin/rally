@@ -16,7 +16,7 @@ import {
 } from "@/lib/rally/rallyConfig";
 import { createPlayer, type RallyPlayer } from "@/lib/spotify/player";
 import { hasStreamingScope } from "@/lib/spotify/auth";
-import { IconBack } from "@/components/icons";
+import { IconBack, IconStop } from "@/components/icons";
 import RallyScene, { type RallySceneHandle } from "@/components/RallyScene";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useSessionLog } from "@/lib/sessions/useSessionLog";
@@ -98,6 +98,11 @@ function RallyGame() {
       const outcome = sceneRef.current?.swing(s.power, s.source);
       const { result: timing } = beat.judge();
       const result = applyContact(timing, outcome?.contact ?? "clean");
+
+      // 판정이 나온 뒤에야 공과 타격 이펙트를 그 색으로 물들일 수 있다 —
+      // 쳐내는 순간(swing)엔 타이밍을 아직 모른다. 같은 틱이라 화면상으로는
+      // 처음부터 그 색이었던 것처럼 보인다.
+      sceneRef.current?.judge(result, s.power);
 
       setSwingPower(s.power);
       setFlash(result === "perfect" && s.power > 0.8 ? "smash" : result);
@@ -350,13 +355,20 @@ function RallyGame() {
 
           {/* HUD */}
           <div className="absolute inset-x-0 top-0 flex items-start justify-between p-5">
+            {/* 멈추기 — 누르면 음악과 랠리가 함께 멈추고 결과 화면으로 간다.
+                뒤로가기 화살표로는 "음악이 멈춘다"가 읽히지 않아 정지 아이콘으로 바꿨다. */}
             <button
               type="button"
               onClick={() => setStage("done")}
-              className="tap flex size-10 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur"
-              aria-label={t("rally.result.title")}
+              className="hover-grow flex items-center gap-2 rounded-full bg-black/50 py-2 pl-2.5 pr-4 text-white backdrop-blur hover:bg-black/70"
+              aria-label={t("rally.hud.stop")}
             >
-              <IconBack size={18} />
+              <span className="flex size-7 items-center justify-center rounded-full bg-primary text-white">
+                <IconStop size={13} />
+              </span>
+              <span className="type-caption text-[12px] font-semibold">
+                {t("rally.hud.stop")}
+              </span>
             </button>
 
             <div className="text-right">
