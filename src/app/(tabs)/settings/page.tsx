@@ -8,9 +8,10 @@ import { useSpotify } from "@/lib/spotify/useSpotify";
 import { hasStreamingScope } from "@/lib/spotify/auth";
 import { useTheme } from "@/lib/theme/useTheme";
 import { useLocale } from "@/lib/i18n/useLocale";
-import { useProfileName } from "@/lib/profile/useProfileName";
+import { useDisplayName } from "@/lib/profile/useDisplayName";
 import { useAuth } from "@/lib/auth/useAuth";
 import { useSessionPrefs, type NotificationPref } from "@/lib/settings/useSessionPrefs";
+import { usePlan, PLAN_OPTIONS } from "@/lib/settings/usePlan";
 import type { DictKey } from "@/lib/i18n/dictionary";
 
 export default function SettingsPage() {
@@ -18,8 +19,9 @@ export default function SettingsPage() {
   const spotify = useSpotify();
   const { setting, setTheme } = useTheme();
   const { locale, setLocale, t } = useLocale();
-  const { name } = useProfileName();
+  const displayName = useDisplayName();
   const { user, signOut } = useAuth();
+  const { plan, setPlan } = usePlan();
   const { difficulty, notification, setDifficulty, setNotification } = useSessionPrefs();
   // 재생 권한(streaming) 추가 전에 연동한 계정이면 다시 연동해야
   // XR 세션에서 실제 음원이 나온다.
@@ -28,6 +30,7 @@ export default function SettingsPage() {
   const [autoStart, setAutoStart] = useState(false);
   const [difficultySheet, setDifficultySheet] = useState(false);
   const [notificationSheet, setNotificationSheet] = useState(false);
+  const [planSheet, setPlanSheet] = useState(false);
 
   const difficultyOptions = [1, 2, 3, 4, 5].map((n) => ({
     value: n,
@@ -39,11 +42,15 @@ export default function SettingsPage() {
     { value: "off", label: t("settings.notification.off") },
   ];
   const notificationLabel = notificationOptions.find((o) => o.value === notification)!.label;
+  const planOptions = PLAN_OPTIONS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
+  const planLabel = planOptions.find((o) => o.value === plan)!.label;
 
   function logout() {
-    // 이 앱의 유일한 실제 세션은 Spotify 연동이다 — 로그아웃은 그걸 해제하는 것
+    // 계정 세션과 Spotify 연동을 모두 끊고 초기 로그인 화면으로 보낸다.
+    // replace를 쓰는 이유 — push면 뒤로가기로 로그아웃된 화면에 되돌아갈 수 있다.
+    signOut();
     spotify.disconnect();
-    router.push("/");
+    router.replace("/login");
   }
 
   return (
@@ -59,11 +66,14 @@ export default function SettingsPage() {
         <SectionTitle>{t("settings.section.account")}</SectionTitle>
         <Row
           label={t("settings.account.profile")}
-          value={name ?? t("settings.account.profileValue")}
+          value={displayName}
           onClick={() => router.push("/profile")}
         />
-        <Row label={t("settings.account.email")} value="seungjunji01@gmail.com" />
-        <Row label={t("settings.account.plan")} value={t("settings.account.planValue")} />
+        <Row
+          label={t("settings.account.plan")}
+          value={planLabel}
+          onClick={() => setPlanSheet(true)}
+        />
         <Row
           label={t("settings.account.loginMethod")}
           value={user ? t("settings.account.emailLabel") : t("settings.account.notLoggedIn")}
@@ -177,6 +187,16 @@ export default function SettingsPage() {
           value={String(difficulty)}
           onSelect={(v) => setDifficulty(Number(v))}
           onClose={() => setDifficultySheet(false)}
+          cancelLabel={t("settings.sheet.cancel")}
+        />
+      )}
+      {planSheet && (
+        <ActionSheet
+          title={t("settings.sheet.planTitle")}
+          options={planOptions}
+          value={plan}
+          onSelect={setPlan}
+          onClose={() => setPlanSheet(false)}
           cancelLabel={t("settings.sheet.cancel")}
         />
       )}

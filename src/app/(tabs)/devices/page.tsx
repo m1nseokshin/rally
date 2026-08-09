@@ -5,6 +5,7 @@ import { devices as seed, type Device } from "@/lib/data";
 import { PageHeader, SectionTitle } from "@/components/ui";
 import { IconDevice, IconPaddle, IconPlus, IconChevron, IconCheck } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
+import DeviceScanSheet from "@/components/DeviceScanSheet";
 
 type CalibrateState = "idle" | "running" | "done";
 
@@ -31,9 +32,14 @@ export default function DevicesPage() {
     setDetailId(null);
   }
 
+  /** 검색 시트를 연다 — 실제 탐색 연출과 등록은 시트가 맡는다 */
   function scan() {
     setScanning(true);
-    setTimeout(() => setScanning(false), 2000);
+  }
+
+  /** 시트에서 등록을 마친 기기를 목록에 넣는다 */
+  function addDevice(device: Device) {
+    setDevices((prev) => (prev.some((d) => d.id === device.id) ? prev : [...prev, device]));
   }
 
   function calibrateStart() {
@@ -158,6 +164,13 @@ export default function DevicesPage() {
           device={detailDevice}
           onClose={() => setDetailId(null)}
           onForget={() => forget(detailDevice.id)}
+        />
+      )}
+      {scanning && (
+        <DeviceScanSheet
+          knownIds={devices.map((d) => d.id)}
+          onAdd={addDevice}
+          onClose={() => setScanning(false)}
         />
       )}
     </div>

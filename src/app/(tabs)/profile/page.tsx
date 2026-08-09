@@ -7,6 +7,8 @@ import { PageHeader, Row, SectionTitle, StatTile } from "@/components/ui";
 import { IconBack, IconCamera, IconDevice, IconPaddle } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useProfileName } from "@/lib/profile/useProfileName";
+import { useDisplayName } from "@/lib/profile/useDisplayName";
+import { usePlan, PLAN_OPTIONS } from "@/lib/settings/usePlan";
 import { useDetailBack } from "@/lib/useDetailBack";
 import { useProfileAvatar } from "@/lib/profile/useProfileAvatar";
 import { useSessionLog } from "@/lib/sessions/useSessionLog";
@@ -14,19 +16,24 @@ import { useSessionLog } from "@/lib/sessions/useSessionLog";
 function ProfileInner() {
   const params = useSearchParams();
   const { t } = useLocale();
-  const { name, setName } = useProfileName();
+  const { setName } = useProfileName();
   const { avatar, setAvatar } = useProfileAvatar();
   const { sessions: todaySessions } = useSessionLog();
   // 오른쪽으로 빠져나가는 연출을 재생한 뒤 실제로 뒤로 간다
   const goBack = useDetailBack("/settings");
+  // 지금 화면에 쓸 이름 — 직접 고친 이름 > 가입할 때 쓴 이름 > 기본값
+  const displayName = useDisplayName();
   // 홈 아바타에서 ?edit=1로 들어오면 이름 입력칸을 바로 연 상태로 시작한다 —
   // "프로필 수정하러 왔다"는 의도가 이미 분명하니 한 번 더 누르게 하지 않는다.
   const wantsEdit = params.get("edit") === "1";
   const [editing, setEditing] = useState(wantsEdit);
-  const [draft, setDraft] = useState(wantsEdit ? (name ?? "") : "");
+  // 입력칸에는 지금 보이는 이름이 그대로 들어가 있어야 한다(빈칸에서 시작하면
+  // 뭘 고치는지 알 수 없다)
+  const [draft, setDraft] = useState(wantsEdit ? displayName : "");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const displayName = name ?? t("settings.account.profileValue");
+  const { plan } = usePlan();
+  const planLabel = t(PLAN_OPTIONS.find((o) => o.value === plan)!.labelKey);
 
   // 활동 요약 — todaySessions는 랠리 게임 결과가 실제로 쌓이는 스토어다
   // (실제 서비스라면 전체 기간 집계가 될 자리).
@@ -174,8 +181,7 @@ function ProfileInner() {
       {/* 기본 정보 */}
       <section className="mt-10">
         <SectionTitle>{t("profile.section.about")}</SectionTitle>
-        <Row label={t("settings.account.email")} value="seungjunji01@gmail.com" />
-        <Row label={t("settings.account.plan")} value={t("profile.plan")} />
+        <Row label={t("settings.account.plan")} value={planLabel} />
         <Row label={t("profile.memberSince")} value={t("profile.memberSinceValue")} />
       </section>
 
