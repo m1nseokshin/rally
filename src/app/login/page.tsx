@@ -1,18 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageHeader, PillButton } from "@/components/ui";
 import { IconBack } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useAuth } from "@/lib/auth/useAuth";
 import { useDetailBack } from "@/lib/useDetailBack";
 
-export default function LoginPage() {
+function LoginInner() {
   const router = useRouter();
+  const params = useSearchParams();
   const { t } = useLocale();
   const { signInWithEmail, signUpWithEmail } = useAuth();
   const goBack = useDetailBack("/settings");
+
+  // 방금 로그아웃해서 튕겨 온 경우엔 뒤로가기를 감춘다 — 돌아갈 곳이
+  // 로그아웃된 화면뿐이라 눌러봐야 앞뒤가 안 맞는다. 반대로 설정에서
+  // "로그인"을 눌러 직접 들어온 경우엔 이게 유일한 취소 수단이다
+  // (이 화면엔 탭바가 없다).
+  const canGoBack = params.get("signedout") !== "1";
 
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [id, setId] = useState("");
@@ -44,16 +51,18 @@ export default function LoginPage() {
 
   return (
     <div className="pb-10">
-      <div className="flex items-center gap-2 px-6 pt-6">
-        <button
-          type="button"
-          onClick={goBack}
-          aria-label={t("login.back")}
-          className="tap flex size-9 items-center justify-center rounded-full bg-cloud text-ink"
-        >
-          <IconBack size={16} />
-        </button>
-      </div>
+      {canGoBack && (
+        <div className="flex items-center gap-2 px-6 pt-6">
+          <button
+            type="button"
+            onClick={goBack}
+            aria-label={t("login.back")}
+            className="tap flex size-9 items-center justify-center rounded-full bg-cloud text-ink"
+          >
+            <IconBack size={16} />
+          </button>
+        </div>
+      )}
 
       <PageHeader eyebrow={t("login.eyebrow")} title={t("login.title")} desc={t("login.desc")} />
 
@@ -102,6 +111,15 @@ export default function LoginPage() {
         </button>
       </section>
     </div>
+  );
+}
+
+// useSearchParams는 정적 export 빌드에서 Suspense 경계를 요구한다
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
   );
 }
 

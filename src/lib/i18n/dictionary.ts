@@ -141,6 +141,8 @@ export const dictionary = {
     "play.filter.empty": "조건에 맞는 곡이 없어요. 필터를 줄여보세요.",
     "play.filter.resultCount": "{count}곡 찾음",
     "play.filter.source.favorites": "즐겨찾기",
+    "play.favorites.label": "즐겨찾기한 곡 · {count}곡",
+    "play.favorites.empty": "아직 즐겨찾기한 곡이 없어요. 곡을 열어 하트를 눌러보세요.",
 
     // 곡 상세(전체화면)
     "detail.howTitle": "이 곡은 이렇게 진행돼요",
@@ -527,6 +529,8 @@ export const dictionary = {
     "play.filter.empty": "No tracks match. Try loosening the filters.",
     "play.filter.resultCount": "{count} tracks found",
     "play.filter.source.favorites": "Favourites",
+    "play.favorites.label": "Favourites · {count} tracks",
+    "play.favorites.empty": "No favourites yet. Open a track and tap the heart.",
 
     // Track detail (full screen)
     "detail.howTitle": "How this track plays",

@@ -3,6 +3,7 @@ import { Bebas_Neue } from "next/font/google";
 import localFont from "next/font/local";
 import Script from "next/script";
 import { BASE_PATH } from "@/lib/basePath";
+import NoContextMenu from "@/components/NoContextMenu";
 import "./globals.css";
 
 // Pretendard — Nike의 Helvetica Now/Futura와 가장 결이 가까운 한글 폰트.
@@ -88,6 +89,7 @@ export default function RootLayout({
         <Script id="theme-init" strategy="beforeInteractive">
           {THEME_INIT_SCRIPT}
         </Script>
+        <NoContextMenu />
         {children}
       </body>
     </html>

@@ -50,7 +50,9 @@ export default function SettingsPage() {
     // replace를 쓰는 이유 — push면 뒤로가기로 로그아웃된 화면에 되돌아갈 수 있다.
     signOut();
     spotify.disconnect();
-    router.replace("/login");
+    // signedout 표시를 달아 보낸다 — 로그인 화면이 이걸 보고 뒤로가기를 숨긴다.
+    // 로그아웃한 뒤에 돌아갈 곳은 방금 로그아웃한 화면뿐이라 의미가 없다.
+    router.replace("/login?signedout=1");
   }
 
   return (
