@@ -386,6 +386,46 @@ html {
   transform-origin: top right;
 }
 
+/*
+  상세 페이지 — 탭 바의 기본 화면에서 한 단계 "들어가는" 화면은 오른쪽에서
+  밀려 들어오고, 뒤로 갈 땐 오른쪽으로 다시 빠져나간다. iOS 내비게이션과
+  같은 방향 규칙이라 어디로 이동했는지가 몸으로 읽힌다.
+
+  나갈 때(detail-out)는 들어올 때보다 짧다 — 뒤로가기는 결과를 빨리 보고
+  싶은 동작이라, 들어올 때와 같은 길이면 답답하게 느껴진다.
+*/
+@keyframes detail-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.detail-in {
+  animation: detail-in 1800ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* 아래 화면이 비쳐 보이지 않도록 불투명 배경을 깔고 위로 올린다 */
+  position: relative;
+  z-index: 30;
+  min-height: 100%;
+  background: var(--color-canvas);
+}
+@keyframes detail-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+.detail-out {
+  animation: detail-out 900ms cubic-bezier(0.4, 0, 0.7, 0.2) forwards;
+  position: relative;
+  z-index: 30;
+  min-height: 100%;
+  background: var(--color-canvas);
+}
+
 /* 온보딩 "시작하기"처럼, 화면 전체가 하단에서 스윽 올라와 이전 화면을
    덮는 큰 전환. 탭 이동의 미묘한 page-in과 달리 1초짜리 뚜렷한 연출이라
    별도 클래스로 뺐다(lib/transition.ts가 1회성으로 트리거). */
@@ -411,7 +451,9 @@ html {
   .scrim-in,
   .pop-in,
   .slide-up-in,
-  .results-in {
+  .results-in,
+  .detail-in,
+  .detail-out {
     animation: none;
   }
   .chip {

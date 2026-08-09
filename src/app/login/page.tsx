@@ -6,11 +6,13 @@ import { PageHeader, PillButton } from "@/components/ui";
 import { IconBack } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useAuth } from "@/lib/auth/useAuth";
+import { useDetailBack } from "@/lib/useDetailBack";
 
 export default function LoginPage() {
   const router = useRouter();
   const { t } = useLocale();
   const { signInWithEmail, signUpWithEmail } = useAuth();
+  const goBack = useDetailBack("/settings");
 
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [id, setId] = useState("");
@@ -45,7 +47,7 @@ export default function LoginPage() {
       <div className="flex items-center gap-2 px-6 pt-6">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={goBack}
           aria-label={t("login.back")}
           className="tap flex size-9 items-center justify-center rounded-full bg-cloud text-ink"
         >

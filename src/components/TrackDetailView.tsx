@@ -30,6 +30,14 @@ export default function TrackDetailView({
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  // 라우트가 아니라 오버레이라 언마운트 시점을 우리가 쥐고 있다 —
+  // 닫기를 누르면 바로 없애지 않고 나가는 애니메이션을 재생한 뒤 없앤다.
+  const [closing, setClosing] = useState(false);
+
+  function handleClose() {
+    setClosing(true);
+    setTimeout(onClose, 900); // .detail-out 길이와 맞춘다
+  }
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -71,7 +79,11 @@ export default function TrackDetailView({
         : t("detail.pace.slow");
 
   return (
-    <div className="page-in absolute inset-0 z-40 flex flex-col bg-canvas">
+    <div
+      className={`absolute inset-0 z-40 flex flex-col bg-canvas ${
+        closing ? "detail-out" : "detail-in"
+      }`}
+    >
       {/* 상단 커버 */}
       <div className="relative shrink-0">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-black">
@@ -94,7 +106,7 @@ export default function TrackDetailView({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label={t("common.back")}
             className="tap absolute left-4 top-4 flex size-10 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur"
           >

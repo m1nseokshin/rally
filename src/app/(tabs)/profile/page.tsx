@@ -1,21 +1,22 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { devices } from "@/lib/data";
 import { PageHeader, Row, SectionTitle, StatTile } from "@/components/ui";
 import { IconBack, IconCamera, IconDevice, IconPaddle } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useProfileName } from "@/lib/profile/useProfileName";
+import { useDetailBack } from "@/lib/useDetailBack";
 import { useProfileAvatar } from "@/lib/profile/useProfileAvatar";
 import { useSessionLog } from "@/lib/sessions/useSessionLog";
 
 export default function ProfilePage() {
-  const router = useRouter();
   const { t } = useLocale();
   const { name, setName } = useProfileName();
   const { avatar, setAvatar } = useProfileAvatar();
   const { sessions: todaySessions } = useSessionLog();
+  // 오른쪽으로 빠져나가는 연출을 재생한 뒤 실제로 뒤로 간다
+  const goBack = useDetailBack("/settings");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,7 +62,7 @@ export default function ProfilePage() {
       <div className="flex items-center gap-2 px-6 pt-6">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={goBack}
           aria-label={t("common.back")}
           className="tap flex size-9 items-center justify-center rounded-full bg-cloud text-ink"
         >

@@ -76,7 +76,9 @@ export default function PhoneFrame({
           className="relative flex h-dvh w-screen flex-col overflow-hidden bg-canvas md:h-[874px] md:w-[402px] md:rounded-[54px] md:shadow-[0_0_0_11px_#111111,0_28px_60px_-12px_rgba(0,0,0,0.4)]"
           style={{ transform: "translateZ(0)" }}
         >
-          <main className="rail flex-1 overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]">
+          {/* overflow-x-hidden — 상세 페이지가 오른쪽에서 밀려 들어올 때
+              화면 밖 영역이 가로 스크롤로 잡히지 않게 막는다 */}
+          <main className="rail flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pt-[env(safe-area-inset-top)]">
             {children}
           </main>
           {!hideTabBar && <TabBar />}
