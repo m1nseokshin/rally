@@ -18,7 +18,7 @@ export const dictionary = {
     "nav.settings": "설정",
 
     // 홈
-    "home.greeting": "좋은 저녁이에요, 민석님",
+    "home.greeting": "좋은 저녁이에요, {name}님",
     "home.title": "오늘도 랠리를\n이어가볼까요",
     "home.hero.eyebrow": "오늘의 추천 세션",
     "home.hero.cta": "세션 시작",
@@ -239,12 +239,12 @@ export const dictionary = {
     "insights.session.focus": "집중",
 
     // 설정
-    "settings.eyebrow": "민석님 계정",
+    "settings.eyebrow": "{name}님 계정",
     "settings.title": "설정",
     "settings.desc": "연동 계정, 알림, 세션 기본값을 여기서 바꿀 수 있어요.",
     "settings.section.account": "계정",
     "settings.account.profile": "프로필",
-    "settings.account.profileValue": "강민석",
+    "settings.account.profileValue": "랠린이",
     "settings.account.email": "이메일",
     "settings.account.plan": "구독 플랜",
     "settings.account.planValue": "Rally Pro",
@@ -406,7 +406,7 @@ export const dictionary = {
     "nav.insights": "Insights",
     "nav.settings": "Settings",
 
-    "home.greeting": "Good evening, Minseok",
+    "home.greeting": "Good evening, {name}",
     "home.title": "Ready for\nanother rally?",
     "home.hero.eyebrow": "Today's pick",
     "home.hero.cta": "Start session",
@@ -624,12 +624,12 @@ export const dictionary = {
     "insights.session.meta": "{minutes} min · {accuracy}% accuracy · {combo}x max combo",
     "insights.session.focus": "Focus",
 
-    "settings.eyebrow": "Minseok's account",
+    "settings.eyebrow": "{name}'s account",
     "settings.title": "Settings",
     "settings.desc": "Manage your linked account, notifications, and session defaults.",
     "settings.section.account": "Account",
     "settings.account.profile": "Profile",
-    "settings.account.profileValue": "Minseok Kang",
+    "settings.account.profileValue": "Rally Rookie",
     "settings.account.email": "Email",
     "settings.account.plan": "Plan",
     "settings.account.planValue": "Rally Pro",

@@ -58,7 +58,7 @@ export default function SettingsPage() {
   return (
     <div className="pb-10">
       <PageHeader
-        eyebrow={t("settings.eyebrow")}
+        eyebrow={t("settings.eyebrow", { name: displayName })}
         title={t("settings.title")}
         desc={t("settings.desc")}
       />

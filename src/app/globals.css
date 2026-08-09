@@ -535,7 +535,10 @@ body {
   }
 }
 .slide-up-in {
-  animation: slide-up-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* 온보딩을 마치고 홈이 처음 올라오는 순간 — 1초를 통째로 쓴다.
+     다른 전환(500ms)보다 눈에 띄게 느린 게 의도다. 앱에 "들어왔다"는
+     한 번뿐인 장면이라, 여기서만 시간을 더 준다. */
+  animation: slide-up-in 1000ms cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   z-index: 20;
   background: var(--color-canvas);

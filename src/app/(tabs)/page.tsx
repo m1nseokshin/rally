@@ -10,9 +10,11 @@ import ProfileMenu from "@/components/ProfileMenu";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useSessionLog } from "@/lib/sessions/useSessionLog";
 import { useSpotify } from "@/lib/spotify/useSpotify";
+import { useDisplayName } from "@/lib/profile/useDisplayName";
 
 export default function HomePage() {
   const { t } = useLocale();
+  const displayName = useDisplayName();
   const { sessions: todaySessions } = useSessionLog();
   const spotify = useSpotify();
   const totalMinutes = todaySessions.reduce((sum, s) => sum + s.minutes, 0);
@@ -35,7 +37,9 @@ export default function HomePage() {
         style={{ paddingTop: "clamp(28px, 12dvh, 30dvh)" }}
       >
         <div className="min-w-0">
-          <p className="text-[13px] font-medium text-mute">{t("home.greeting")}</p>
+          <p className="text-[13px] font-medium text-mute">
+            {t("home.greeting", { name: displayName })}
+          </p>
           <h1 className="type-display mt-1 whitespace-pre-line text-[44px] text-ink">
             {t("home.title")}
           </h1>
@@ -102,19 +106,6 @@ export default function HomePage() {
               }}
             />
           )}
-
-          {/* 비트 그리드 — 상단 절반 */}
-          <div className="absolute inset-x-6 top-[16%] flex h-28 items-end gap-[4px]">
-            {featured.hits.map((h, i) => (
-              <span
-                key={i}
-                className={`flex-1 rounded-full ${
-                  i % 3 === 1 ? "bg-primary" : "bg-white/35"
-                }`}
-                style={{ height: `${24 + h * 72}%` }}
-              />
-            ))}
-          </div>
 
           {/* 하단 가독성 그라디언트 */}
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/85 to-transparent" />
