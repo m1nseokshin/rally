@@ -74,13 +74,13 @@ export default function InsightsPage() {
           {weekly ? (
             <>
               <div className="flex h-36 items-end gap-[5px]">
-                {weeklyFocus.map(({ day, focus }) => {
+                {weeklyFocus.map(({ day, focus }, i) => {
                   const isPeak = focus === Math.max(...weeklyFocus.map((w) => w.focus));
                   return (
                     <span
                       key={day}
-                      className={`flex-1 rounded-t-[3px] ${isPeak ? "bg-primary" : "bg-ink"}`}
-                      style={{ height: `${Math.max(focus, 3)}%` }}
+                      className={`bar-grow flex-1 rounded-t-[3px] ${isPeak ? "bg-primary" : "bg-ink"}`}
+                      style={{ height: `${Math.max(focus, 3)}%`, animationDelay: `${i * 45}ms` }}
                     />
                   );
                 })}
@@ -99,17 +99,17 @@ export default function InsightsPage() {
           ) : (
             <>
               <div className="flex h-36 items-end gap-[5px]">
-                {focusCurve.map(({ hour, focus }) => (
+                {focusCurve.map(({ hour, focus }, i) => (
                   <span
                     key={hour}
-                    className={`flex-1 rounded-t-[3px] ${
+                    className={`bar-grow flex-1 rounded-t-[3px] ${
                       focus === 0
                         ? "bg-hairline-soft"
                         : hour === peak.hour
                           ? "bg-primary"
                           : "bg-ink"
                     }`}
-                    style={{ height: `${Math.max(focus, 3)}%` }}
+                    style={{ height: `${Math.max(focus, 3)}%`, animationDelay: `${i * 35}ms` }}
                   />
                 ))}
               </div>

@@ -27,12 +27,13 @@ export default function PageTransition({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const kind = useMemo(() => consumeTransition(), [pathname]);
 
+  // page-stagger — 어느 화면이든 최상단 섹션부터 차례로 뜨게 하는 공통 처리
   const className =
-    kind === "slide-up"
+    (kind === "slide-up"
       ? "slide-up-in"
       : isDetailRoute(pathname)
         ? "detail-in"
-        : "page-in";
+        : "page-in") + " page-stagger";
 
   const rootRef = useRef<HTMLDivElement>(null);
 

@@ -314,6 +314,43 @@ body {
 .stagger > *:nth-child(10) { animation-delay: 320ms; }
 .stagger > *:nth-child(11) { animation-delay: 352ms; }
 
+/*
+  페이지 공통 — 화면이 들어올 때 최상단 섹션부터 차례로 뜬다.
+
+  PageTransition이 감싸는 div의 자식은 각 페이지의 루트 div 하나뿐이라
+  거기에 .stagger를 걸면 아무 일도 안 일어난다. 실제로 줄 세워야 하는 건
+  그 안의 섹션들이라 한 단계 더 내려가서(> * > *) 잡는다. 모든 페이지가
+  "루트 div 하나 + 그 안에 섹션들" 구조라 이 선택자가 성립한다.
+*/
+.page-stagger > * > * {
+  animation: item-in 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 320ms;
+}
+.page-stagger > * > *:nth-child(1) { animation-delay: 0ms; }
+.page-stagger > * > *:nth-child(2) { animation-delay: 70ms; }
+.page-stagger > * > *:nth-child(3) { animation-delay: 140ms; }
+.page-stagger > * > *:nth-child(4) { animation-delay: 200ms; }
+.page-stagger > * > *:nth-child(5) { animation-delay: 250ms; }
+.page-stagger > * > *:nth-child(6) { animation-delay: 290ms; }
+
+/*
+  막대그래프가 바닥에서 자라 올라온다. 높이(height)는 인라인 %로 이미
+  잡혀 있으니 건드리지 않고 scaleY만 0→1로 준다 — 레이아웃 재계산 없이
+  GPU에서 처리돼 매끄럽고, 원래 높이 계산식을 손댈 필요도 없다.
+*/
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.bar-grow {
+  transform-origin: bottom;
+  animation: bar-grow 620ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
 /* Hide scrollbars on horizontal rails */
 .rail {
   scrollbar-width: none;
@@ -437,7 +474,7 @@ body {
   }
 }
 .detail-out {
-  animation: detail-out 500ms cubic-bezier(0.4, 0, 0.7, 0.2) forwards;
+  animation: detail-out 280ms cubic-bezier(0.4, 0, 0.7, 0.2) forwards;
   position: relative;
   z-index: 30;
   min-height: 100%;
@@ -471,7 +508,10 @@ body {
   .slide-up-in,
   .results-in,
   .detail-in,
-  .detail-out {
+  .detail-out,
+  .bar-grow,
+  .stagger > *,
+  .page-stagger > * > * {
     animation: none;
   }
   .chip {

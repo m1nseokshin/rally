@@ -77,8 +77,17 @@ export default function PhoneFrame({
           style={{ transform: "translateZ(0)" }}
         >
           {/* overflow-x-hidden — 상세 페이지가 오른쪽에서 밀려 들어올 때
-              화면 밖 영역이 가로 스크롤로 잡히지 않게 막는다 */}
-          <main className="rail flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pt-[env(safe-area-inset-top)]">
+              화면 밖 영역이 가로 스크롤로 잡히지 않게 막는다.
+              탭바가 흐름에서 빠져 바닥에 고정됐으므로, 그 높이(68px + 하단
+              세이프에어리어)만큼 아래 여백을 줘야 마지막 항목이 안 가린다. */}
+          <main
+            className="rail flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pt-[env(safe-area-inset-top)]"
+            style={{
+              paddingBottom: hideTabBar
+                ? undefined
+                : "calc(68px + env(safe-area-inset-bottom))",
+            }}
+          >
             {children}
           </main>
           {!hideTabBar && <TabBar />}

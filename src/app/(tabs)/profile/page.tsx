@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { devices } from "@/lib/data";
 import { PageHeader, Row, SectionTitle, StatTile } from "@/components/ui";
 import { IconBack, IconCamera, IconDevice, IconPaddle } from "@/components/icons";
@@ -10,15 +11,19 @@ import { useDetailBack } from "@/lib/useDetailBack";
 import { useProfileAvatar } from "@/lib/profile/useProfileAvatar";
 import { useSessionLog } from "@/lib/sessions/useSessionLog";
 
-export default function ProfilePage() {
+function ProfileInner() {
+  const params = useSearchParams();
   const { t } = useLocale();
   const { name, setName } = useProfileName();
   const { avatar, setAvatar } = useProfileAvatar();
   const { sessions: todaySessions } = useSessionLog();
   // 오른쪽으로 빠져나가는 연출을 재생한 뒤 실제로 뒤로 간다
   const goBack = useDetailBack("/settings");
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState("");
+  // 홈 아바타에서 ?edit=1로 들어오면 이름 입력칸을 바로 연 상태로 시작한다 —
+  // "프로필 수정하러 왔다"는 의도가 이미 분명하니 한 번 더 누르게 하지 않는다.
+  const wantsEdit = params.get("edit") === "1";
+  const [editing, setEditing] = useState(wantsEdit);
+  const [draft, setDraft] = useState(wantsEdit ? (name ?? "") : "");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const displayName = name ?? t("settings.account.profileValue");
@@ -209,5 +214,14 @@ export default function ProfilePage() {
         </p>
       </section>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  // useSearchParams는 Suspense 경계가 필요하다(정적 export 빌드에서 특히)
+  return (
+    <Suspense fallback={null}>
+      <ProfileInner />
+    </Suspense>
   );
 }

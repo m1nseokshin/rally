@@ -1,6 +1,14 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { IconChevron, IconCheck } from "./icons";
+import { useCountUp } from "@/lib/useCountUp";
+
+/** 0에서 목표 숫자까지 올라가는 표시 — StatTile 안에서만 쓴다 */
+function CountUp({ value }: { value: number }) {
+  return <>{useCountUp(value)}</>;
+}
 
 /** 페이지 상단 — 대문자 디스플레이 타이틀 + 보조 카피 */
 export function PageHeader({
@@ -168,7 +176,7 @@ export function Row({
   );
 }
 
-/** 수치 강조 타일 */
+/** 수치 강조 타일 — 숫자는 0에서 올라간다 */
 export function StatTile({
   label,
   value,
@@ -191,9 +199,9 @@ export function StatTile({
       <p className="text-[12px] font-medium text-mute">{label}</p>
       <p className="mt-2 flex items-baseline gap-1">
         <span
-          className={`type-display type-display-sm text-[32px] leading-none ${color}`}
+          className={`type-display type-display-sm text-[32px] leading-none tabular-nums ${color}`}
         >
-          {value}
+          {typeof value === "number" ? <CountUp value={value} /> : value}
         </span>
         {unit && (
           <span
