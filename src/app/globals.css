@@ -279,20 +279,20 @@ body {
   }
 }
 .stagger > * {
-  animation: item-in 760ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  animation-delay: 700ms;
+  animation: item-in 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 360ms;
 }
-.stagger > *:nth-child(1) { animation-delay: 60ms; }
-.stagger > *:nth-child(2) { animation-delay: 120ms; }
-.stagger > *:nth-child(3) { animation-delay: 180ms; }
-.stagger > *:nth-child(4) { animation-delay: 240ms; }
-.stagger > *:nth-child(5) { animation-delay: 300ms; }
-.stagger > *:nth-child(6) { animation-delay: 360ms; }
-.stagger > *:nth-child(7) { animation-delay: 420ms; }
-.stagger > *:nth-child(8) { animation-delay: 480ms; }
-.stagger > *:nth-child(9) { animation-delay: 540ms; }
-.stagger > *:nth-child(10) { animation-delay: 600ms; }
-.stagger > *:nth-child(11) { animation-delay: 660ms; }
+.stagger > *:nth-child(1) { animation-delay: 32ms; }
+.stagger > *:nth-child(2) { animation-delay: 64ms; }
+.stagger > *:nth-child(3) { animation-delay: 96ms; }
+.stagger > *:nth-child(4) { animation-delay: 128ms; }
+.stagger > *:nth-child(5) { animation-delay: 160ms; }
+.stagger > *:nth-child(6) { animation-delay: 192ms; }
+.stagger > *:nth-child(7) { animation-delay: 224ms; }
+.stagger > *:nth-child(8) { animation-delay: 256ms; }
+.stagger > *:nth-child(9) { animation-delay: 288ms; }
+.stagger > *:nth-child(10) { animation-delay: 320ms; }
+.stagger > *:nth-child(11) { animation-delay: 352ms; }
 
 /* Hide scrollbars on horizontal rails */
 .rail {
@@ -341,7 +341,7 @@ html {
   }
 }
 .page-in {
-  animation: page-in 2.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: page-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 바텀시트 — 아래에서 슬라이드 업 */
@@ -403,7 +403,7 @@ html {
   }
 }
 .detail-in {
-  animation: detail-in 1800ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: detail-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
   /* 아래 화면이 비쳐 보이지 않도록 불투명 배경을 깔고 위로 올린다 */
   position: relative;
   z-index: 30;
@@ -419,7 +419,7 @@ html {
   }
 }
 .detail-out {
-  animation: detail-out 900ms cubic-bezier(0.4, 0, 0.7, 0.2) forwards;
+  animation: detail-out 500ms cubic-bezier(0.4, 0, 0.7, 0.2) forwards;
   position: relative;
   z-index: 30;
   min-height: 100%;
@@ -438,7 +438,7 @@ html {
   }
 }
 .slide-up-in {
-  animation: slide-up-in 2400ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slide-up-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   z-index: 20;
   background: var(--color-canvas);

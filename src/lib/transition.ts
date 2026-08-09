@@ -66,6 +66,6 @@ export function playDetailExit(): Promise<void> {
     };
     el.addEventListener("animationend", finish);
     // animationend가 안 오는 경우(탭 백그라운드 등)에도 갇히지 않게 안전장치
-    setTimeout(finish, 1200);
+    setTimeout(finish, 800);
   });
 }

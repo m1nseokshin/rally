@@ -36,7 +36,7 @@ export default function TrackDetailView({
 
   function handleClose() {
     setClosing(true);
-    setTimeout(onClose, 900); // .detail-out 길이와 맞춘다
+    setTimeout(onClose, 500); // .detail-out 길이와 맞춘다
   }
 
   useEffect(() => {
