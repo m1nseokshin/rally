@@ -4,7 +4,13 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { useRouter } from "next/navigation";
 import { markOnboardingComplete } from "@/lib/onboarding";
 import { requestTransition } from "@/lib/transition";
-import { IconWave, IconPaddle, IconInsight, IconDevice } from "@/components/icons";
+import {
+  IconWave,
+  IconPaddle,
+  IconInsight,
+  IconDevice,
+  LogoWordmarkWhite,
+} from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useAuth } from "@/lib/auth/useAuth";
 import type { DictKey, Locale } from "@/lib/i18n/dictionary";
@@ -121,13 +127,18 @@ export default function OnboardingPage() {
   );
 }
 
-/** 1) 스플래시 — 브랜드 워드마크만 잠깐 보여준다 */
+/**
+ * 1) 스플래시 — 브랜드 워드마크만 잠깐 보여준다.
+ *
+ * 예전엔 .type-display로 "Rally"를 폰트 렌더링했는데, 이제 실제 로고 파일의
+ * 벡터를 그대로 쓴다 — 마크와 글자 사이 간격이 브랜드 자산과 완전히 같아진다.
+ */
 function Splash() {
   const { t } = useLocale();
   return (
     <div className="flex h-full flex-col items-center justify-center bg-black">
-      <p className="type-display text-[56px] leading-none text-white">Rally</p>
-      <p className="type-caption mt-3 text-[13px] text-white/50">{t("splash.tagline")}</p>
+      <LogoWordmarkWhite width={200} />
+      <p className="type-caption mt-4 text-[13px] text-white/50">{t("splash.tagline")}</p>
     </div>
   );
 }

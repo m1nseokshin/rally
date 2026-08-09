@@ -41,7 +41,12 @@ export const metadata: Metadata = {
   // (에셋 청크·<Link>와 달리) — GitHub Pages(/rally 서브패스)에서 깨지지 않게
   // 직접 붙인다.
   icons: {
+    // 브라우저 탭(파비콘)은 16/32처럼 작은 크기를 먼저 찾는다 — 192/512만 있으면
+    // 그걸 억지로 축소해 탭에 넣는데, 로고처럼 가는 획이 있는 마크는 그 축소에서
+    // 뭉개진다. 작은 크기를 따로 구워 뒀다.
     icon: [
+      { url: `${BASE_PATH}/icons/favicon-16.png`, sizes: "16x16", type: "image/png" },
+      { url: `${BASE_PATH}/icons/favicon-32.png`, sizes: "32x32", type: "image/png" },
       { url: `${BASE_PATH}/icons/icon-192.png`, sizes: "192x192", type: "image/png" },
       { url: `${BASE_PATH}/icons/icon-512.png`, sizes: "512x512", type: "image/png" },
     ],
