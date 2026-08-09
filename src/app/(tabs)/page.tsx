@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { devices, tracks } from "@/lib/data";
-import { Difficulty, SectionTitle, LinkAction, StatTile } from "@/components/ui";
-import { IconChevron, IconPlay, IconDevice, IconPaddle } from "@/components/icons";
+import { products } from "@/lib/products";
+import { BASE_PATH } from "@/lib/basePath";
+import { SectionTitle, LinkAction, StatTile } from "@/components/ui";
+import { IconChevron, IconPlay, IconDevice, IconPaddle, IconSpotify } from "@/components/icons";
 import ProfileMenu from "@/components/ProfileMenu";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useSessionLog } from "@/lib/sessions/useSessionLog";
@@ -23,7 +25,6 @@ export default function HomePage() {
   // 연동 전에도 홈이 텅 비지 않아야 앱이 뭘 하는 곳인지 보인다.
   const source = spotify.connected && spotify.tracks.length > 0 ? spotify.tracks : tracks;
   const featured = source[0];
-  const recommended = source.slice(1, 7);
 
   return (
     <div className="pb-10">
@@ -42,12 +43,44 @@ export default function HomePage() {
         <ProfileMenu />
       </header>
 
-      {/* 히어로 — 오늘의 세션 */}
+      {/* 히어로 — 연동돼 있으면 오늘의 추천 세션, 아니면 연동 유도.
+          곡이 없는데 추천 세션을 띄우면 목업을 진짜처럼 보여주게 된다. */}
       <section className="px-6">
-        {/* 사진 위에 얹히는 캠페인 타일 — Nike 패턴대로 라이트/다크 앱 테마와
-            무관하게 항상 어둡다. bg-ink/text-canvas 같은 테마 토큰 대신
-            리터럴 black/white를 쓴 이유가 그것 — 다크모드에서 토큰이 뒤집혀도
-            이 카드는 그대로 검게 유지돼야 한다. */}
+        {!spotify.connected ? (
+          <Link
+            href="/play"
+            className="tap relative block aspect-[4/5] w-full overflow-hidden bg-black"
+            style={{ borderRadius: "var(--radius-panel)" }}
+          >
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "radial-gradient(100% 70% at 20% 0%, #1eaa52cc 0%, transparent 60%), linear-gradient(180deg, #1c1c1c 0%, #000 70%)",
+              }}
+            />
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/85 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-6">
+              <p className="mb-2 type-eyebrow text-[12px] font-medium uppercase text-primary">
+                {t("home.connect.eyebrow")}
+              </p>
+              <h2 className="type-display whitespace-pre-line text-[36px] leading-[0.95] text-white">
+                {t("home.connect.title")}
+              </h2>
+              <p className="mt-3 text-[13px] leading-relaxed text-white/60">
+                {t("home.connect.desc")}
+              </p>
+              <span className="tap mt-5 inline-flex h-11 items-center gap-2 rounded-lg bg-white px-6 text-[14px] font-semibold text-black">
+                <IconSpotify size={16} />
+                {t("home.connect.cta")}
+              </span>
+            </div>
+          </Link>
+        ) : (
+        // 사진 위에 얹히는 캠페인 타일 — Nike 패턴대로 라이트/다크 앱 테마와
+        // 무관하게 항상 어둡다. bg-ink/text-canvas 같은 테마 토큰 대신
+        // 리터럴 black/white를 쓴 이유가 그것 — 다크모드에서 토큰이 뒤집혀도
+        // 이 카드는 그대로 검게 유지돼야 한다.
         <Link
           href="/play"
           className="tap relative block aspect-[4/5] w-full overflow-hidden bg-black"
@@ -102,6 +135,7 @@ export default function HomePage() {
             </span>
           </div>
         </Link>
+        )}
       </section>
 
       {/* 오늘 요약 */}
@@ -152,37 +186,47 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 분석 완료 트랙 레일 */}
+      {/* 제품 소개 — 뉴스룸형 상세로 들어간다 */}
       <section className="mt-10">
-        <SectionTitle action={<LinkAction href="/play">{t("home.rail.action")}</LinkAction>}>
-          {t("home.rail.title")}
+        <SectionTitle
+          action={<LinkAction href="/product">{t("home.product.action")}</LinkAction>}
+        >
+          {t("home.product.title")}
         </SectionTitle>
         <div className="rail stagger flex gap-3 overflow-x-auto px-6 pb-1">
-          {recommended.map((track) => (
-            <Link key={track.id} href="/play" className="tap w-[150px] shrink-0">
-              {track.image ? (
-                // eslint-disable-next-line @next/next/no-img-element -- 외부 앨범 아트
-                <img
-                  src={track.image}
-                  alt=""
-                  className="aspect-square w-full object-cover"
-                  style={{ borderRadius: "var(--radius-card)" }}
-                />
-              ) : (
-                <div
-                  className="aspect-square w-full"
-                  style={{
-                    borderRadius: "var(--radius-card)",
-                    background: `linear-gradient(150deg, ${track.cover[0]} 0%, ${track.cover[1]} 100%)`,
-                  }}
-                />
-              )}
-              <p className="mt-2 truncate text-[14px] font-semibold text-ink">{track.title}</p>
-              <p className="truncate text-[12px] text-mute">{track.artist}</p>
-              <div className="mt-2 flex items-center gap-2">
-                <Difficulty level={track.difficulty} />
-                <span className="text-[11px] font-medium text-stone">{track.bpm} BPM</span>
+          {products.map((p) => (
+            <Link
+              key={p.id}
+              href={`/product?id=${p.id}`}
+              className="tap w-[230px] shrink-0"
+            >
+              <div
+                className="relative aspect-[4/3] w-full overflow-hidden bg-black"
+                style={{ borderRadius: "var(--radius-card)" }}
+              >
+                {p.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- public/ 정적 이미지
+                  <img
+                    src={`${BASE_PATH}${p.image}`}
+                    alt=""
+                    className="absolute inset-0 size-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: `linear-gradient(150deg, ${p.cover[0]} 0%, ${p.cover[1]} 100%)`,
+                    }}
+                  />
+                )}
               </div>
+              <p className="type-eyebrow mt-2 text-[10px] font-medium uppercase text-primary">
+                {t(p.eyebrowKey)}
+              </p>
+              <p className="mt-1 truncate text-[15px] font-semibold text-ink">
+                {t(p.nameKey)}
+              </p>
+              <p className="truncate text-[12px] text-mute">{t(p.taglineKey)}</p>
             </Link>
           ))}
         </div>

@@ -125,19 +125,11 @@ export default function PlayPage() {
         desc={t("play.desc")}
       />
 
-      {/* 연동 상태 */}
-      <section className="px-6">
-        <SpotifyCard
-          connected={spotify.connected}
-          loading={spotify.loading}
-          name={spotify.profileName}
-          onConnect={spotify.connect}
-          onDisconnect={spotify.disconnect}
-        />
-        {spotify.error && (
-          <p className="type-caption mt-2 text-[12px] text-primary">{spotify.error}</p>
-        )}
-      </section>
+      {/* 연동 상태 카드는 없앴다 — 연동 전에는 아래 EmptyConnectState가,
+          연동 후에는 곡 목록이 그 자리를 대신한다. 해제는 설정에서 한다. */}
+      {spotify.error && (
+        <p className="type-caption px-6 text-[12px] text-primary">{spotify.error}</p>
+      )}
 
       {/* 검색 */}
       {spotify.connected && (
@@ -610,41 +602,5 @@ function EmptyConnectState({ onConnect }: { onConnect: () => void }) {
         {t("play.empty.cta")}
       </button>
     </div>
-  );
-}
-
-function SpotifyCard({
-  connected,
-  loading,
-  name,
-  onConnect,
-  onDisconnect,
-}: {
-  connected: boolean;
-  loading: boolean;
-  name: string | null;
-  onConnect: () => void;
-  onDisconnect: () => void;
-}) {
-  const { t } = useLocale();
-  return (
-    <button
-      type="button"
-      onClick={connected ? onDisconnect : onConnect}
-      className="tap flex w-full items-center gap-3 bg-cloud px-4 py-4 text-left"
-      style={{ borderRadius: "var(--radius-card)" }}
-    >
-      <IconSpotify size={22} className="text-ink" />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-semibold text-ink">Spotify</p>
-        <p className="truncate text-[11px] font-medium text-success">
-          {loading
-            ? t("play.spotify.connecting")
-            : connected
-              ? (name ?? t("play.spotify.connected"))
-              : t("play.spotify.tapToConnect")}
-        </p>
-      </div>
-    </button>
   );
 }

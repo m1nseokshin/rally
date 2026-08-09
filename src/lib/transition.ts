@@ -23,7 +23,7 @@ export function consumeTransition(): TransitionKind | null {
  * 탭 바의 기본 화면에서 한 단계 "들어가는" 상세 페이지들.
  * 이 경로들은 오른쪽에서 밀려 들어오고, 뒤로 갈 땐 오른쪽으로 빠져나간다.
  */
-const DETAIL_ROUTES = ["/profile", "/login"];
+const DETAIL_ROUTES = ["/profile", "/login", "/product"];
 
 export function isDetailRoute(pathname: string) {
   return DETAIL_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`));

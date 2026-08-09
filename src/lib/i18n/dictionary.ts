@@ -33,6 +33,56 @@ export const dictionary = {
     "home.rail.title": "분석이 끝난 곡",
     "home.rail.action": "더 보기",
 
+    // 홈 — Spotify 미연동 안내
+    "home.connect.eyebrow": "음원 연동",
+    "home.connect.title": "Spotify를 연동하면\n오늘의 세션이 열려요",
+    "home.connect.desc": "듣던 곡을 그대로 가져와 박자에 맞춘 랠리를 만들어드려요.",
+    "home.connect.cta": "연동하러 가기",
+
+    // 홈 — 제품 소개
+    "home.product.title": "Rally 기어",
+    "home.product.action": "전체 보기",
+
+    // 제품 소개
+    "product.pageTitle": "제품",
+    "product.eyebrow": "Rally 기어",
+    "product.desc": "랠리를 완성하는 장비들.",
+    "product.readMore": "자세히 보기",
+    "product.spec.display": "디스플레이",
+    "product.spec.tracking": "트래킹",
+    "product.spec.weight": "무게",
+    "product.spec.latency": "지연",
+    "product.spec.battery": "배터리",
+
+    "product.vision.eyebrow": "XR 헤드셋",
+    "product.vision.name": "Rally Vision",
+    "product.vision.tagline": "코트를 눈앞에 펼치는 XR 고글",
+    "product.vision.spec.display": "4K 마이크로 OLED",
+    "product.vision.spec.tracking": "핸드 트래킹 내장",
+    "product.vision.spec.weight": "298g",
+    "product.vision.s1.heading": "공이 진짜로 날아온다",
+    "product.vision.s1.body":
+      "실제 탁구대 규격을 그대로 옮긴 가상 코트 위에서, 음악의 박자에 맞춰 공이 넘어옵니다. 네트 너머 거리감까지 실제와 같게 설계해 몸이 먼저 반응합니다.",
+    "product.vision.s2.heading": "맨손으로 잡는 라켓",
+    "product.vision.s2.body":
+      "별도 컨트롤러가 필요 없습니다. 손을 들어 주먹을 쥐거나 손바닥을 펴면 라켓이 손을 따라오고, 휘두르는 속도가 그대로 타구의 세기가 됩니다.",
+    "product.vision.s3.heading": "하루의 집중을 남긴다",
+    "product.vision.s3.body":
+      "세션마다 정확도와 콤보가 기록되어, 어느 시간대에 가장 몰입했는지 인사이트에서 확인할 수 있습니다.",
+
+    "product.paddle.eyebrow": "액세서리",
+    "product.paddle.name": "Rally Paddle Pro",
+    "product.paddle.tagline": "손맛을 되돌려주는 햅틱 라켓",
+    "product.paddle.spec.latency": "12ms",
+    "product.paddle.spec.battery": "9시간",
+    "product.paddle.spec.weight": "176g",
+    "product.paddle.s1.heading": "맞은 순간이 손에 남는다",
+    "product.paddle.s1.body":
+      "공이 라켓 면에 닿는 지점에 따라 진동의 세기와 위치가 달라집니다. 가운데를 정확히 맞혔는지 눈으로 보기 전에 손이 먼저 압니다.",
+    "product.paddle.s2.heading": "12ms의 차이",
+    "product.paddle.s2.body":
+      "스윙에서 진동까지 12밀리초. 리듬 게임에서 이 지연은 박자를 놓치느냐 마느냐를 가릅니다.",
+
     // 플레이
     "play.eyebrow": "Step 1 — 음원 선택",
     "play.title": "무엇에 맞춰 칠까요",
@@ -361,6 +411,56 @@ export const dictionary = {
     "home.devices.connected": "Connected",
     "home.rail.title": "Analyzed tracks",
     "home.rail.action": "See more",
+
+    // Home - not connected to Spotify
+    "home.connect.eyebrow": "Music",
+    "home.connect.title": "Connect Spotify\nto unlock today's session",
+    "home.connect.desc": "We pull in what you're listening to and build a rally around its beat.",
+    "home.connect.cta": "Connect now",
+
+    // Home - product rail
+    "home.product.title": "Rally gear",
+    "home.product.action": "See all",
+
+    // Products
+    "product.pageTitle": "Products",
+    "product.eyebrow": "Rally gear",
+    "product.desc": "The hardware behind the rally.",
+    "product.readMore": "Read more",
+    "product.spec.display": "Display",
+    "product.spec.tracking": "Tracking",
+    "product.spec.weight": "Weight",
+    "product.spec.latency": "Latency",
+    "product.spec.battery": "Battery",
+
+    "product.vision.eyebrow": "XR headset",
+    "product.vision.name": "Rally Vision",
+    "product.vision.tagline": "The court, opened up in front of you",
+    "product.vision.spec.display": "4K micro-OLED",
+    "product.vision.spec.tracking": "Built-in hand tracking",
+    "product.vision.spec.weight": "298g",
+    "product.vision.s1.heading": "The ball really comes at you",
+    "product.vision.s1.body":
+      "A virtual court built to regulation table dimensions, with balls arriving on the beat of your music. Distance across the net matches the real thing, so your body reacts before you think.",
+    "product.vision.s2.heading": "A paddle you hold with your bare hand",
+    "product.vision.s2.body":
+      "No controller needed. Raise your hand - fist or open palm - and the paddle follows it. How fast you swing becomes how hard you hit.",
+    "product.vision.s3.heading": "Your focus, kept",
+    "product.vision.s3.body":
+      "Every session records accuracy and combo, so Insights can show you when you were most locked in.",
+
+    "product.paddle.eyebrow": "Accessory",
+    "product.paddle.name": "Rally Paddle Pro",
+    "product.paddle.tagline": "Haptics that give the contact back",
+    "product.paddle.spec.latency": "12ms",
+    "product.paddle.spec.battery": "9 hours",
+    "product.paddle.spec.weight": "176g",
+    "product.paddle.s1.heading": "You feel where it landed",
+    "product.paddle.s1.body":
+      "Vibration shifts in strength and position depending on where the ball meets the face. Your hand knows whether you caught it clean before your eyes do.",
+    "product.paddle.s2.heading": "Why 12ms matters",
+    "product.paddle.s2.body":
+      "Twelve milliseconds from swing to haptic. In a rhythm game that gap is the difference between landing the beat and missing it.",
 
     "play.eyebrow": "Step 1 — Pick a track",
     "play.title": "What should we\nplay to?",
