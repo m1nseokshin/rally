@@ -135,14 +135,14 @@ export default function HomePage() {
           {t("home.today.title")}
         </SectionTitle>
         <div className="stagger grid grid-cols-3 gap-2 px-6">
-          <StatTile label={t("home.today.play")} value={totalMinutes} unit="분" />
+          <StatTile label={t("home.today.play")} value={totalMinutes} unit={t("unit.minute")} />
           <StatTile
             label={t("home.today.avgFocus")}
             value={avgFocus}
-            unit="점"
+            unit={t("unit.point")}
             tone="primary"
           />
-          <StatTile label={t("home.today.sessions")} value={todaySessions.length} unit="회" />
+          <StatTile label={t("home.today.sessions")} value={todaySessions.length} unit={t("unit.session")} />
         </div>
       </section>
 
@@ -164,7 +164,7 @@ export default function HomePage() {
               <span className="min-w-0 flex-1">
                 <span className="block text-[15px] font-semibold text-ink">{d.name}</span>
                 <span className="block text-[13px] text-mute">
-                  {d.model} · 배터리 {d.battery}%
+                  {d.model} · {t("devices.scan.battery", { battery: d.battery })}
                 </span>
               </span>
               <span className="flex items-center gap-2 text-[12px] font-medium text-success">

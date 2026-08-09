@@ -155,11 +155,11 @@ function ProfileInner() {
       <section className="mt-10">
         <SectionTitle>{t("profile.section.activity")}</SectionTitle>
         <div className="grid grid-cols-3 gap-2 px-6">
-          <StatTile label={t("profile.stat.totalSessions")} value={totalSessions} unit="회" />
+          <StatTile label={t("profile.stat.totalSessions")} value={totalSessions} unit={t("unit.times")} />
           <StatTile
             label={t("profile.stat.totalMinutes")}
             value={totalMinutes}
-            unit="분"
+            unit={t("unit.minute")}
             tone="primary"
           />
           <StatTile label={t("profile.stat.maxCombo")} value={maxCombo} unit="x" tone="success" />

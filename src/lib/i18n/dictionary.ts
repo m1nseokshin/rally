@@ -9,6 +9,12 @@ export const dictionary = {
   ko: {
     // 공통
     "common.back": "뒤로",
+    // 수치 뒤에 붙는 단위. 영어는 라벨이 이미 "Sessions"라 회차 단위를
+    // 비워 둔다 — "Sessions 3 sessions"가 되면 우스워진다.
+    "unit.minute": "분",
+    "unit.point": "점",
+    "unit.session": "회",
+    "unit.times": "회",
 
     // 공통 탭바
     "nav.home": "홈",
@@ -210,7 +216,6 @@ export const dictionary = {
     "devices.detail.close": "닫기",
 
     // 인사이트
-    "insights.eyebrow": "2026년 8월 8일",
     "insights.title": "오늘의 집중",
     "insights.desc": "랠리를 주고받은 리듬에서 읽어낸 오늘의 집중 흐름이에요.",
     "insights.stat.totalPlay": "총 플레이",
@@ -399,6 +404,10 @@ export const dictionary = {
   },
   en: {
     "common.back": "Back",
+    "unit.minute": "min",
+    "unit.point": "pts",
+    "unit.session": "",
+    "unit.times": "",
 
     "nav.home": "Home",
     "nav.play": "Play",
@@ -596,7 +605,6 @@ export const dictionary = {
     "devices.detail.forget": "Forget device",
     "devices.detail.close": "Close",
 
-    "insights.eyebrow": "August 8, 2026",
     "insights.title": "Today's focus",
     "insights.desc": "A day's worth of focus, read from the rhythm of your rallies.",
     "insights.stat.totalPlay": "Total play",
