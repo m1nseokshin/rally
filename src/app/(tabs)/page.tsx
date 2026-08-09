@@ -193,12 +193,16 @@ export default function HomePage() {
         >
           {t("home.product.title")}
         </SectionTitle>
-        <div className="rail stagger flex gap-3 overflow-x-auto px-6 pb-1">
+        {/* snap-x — 손을 떼면 카드 하나에 딱 맞춰 멎는다. overflow-x-auto만으로도
+            스크롤은 되지만, 카드 사이 어중간한 위치에서 멈추면 "스와이프"라기보다
+            그냥 스크롤바처럼 느껴진다. scroll-pl-6으로 첫 카드가 섹션 여백에 맞춰
+            정렬되게 했다. */}
+        <div className="rail stagger flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-1 scroll-pl-6">
           {products.map((p) => (
             <Link
               key={p.id}
               href={`/product?id=${p.id}`}
-              className="tap w-[230px] shrink-0"
+              className="tap w-[230px] shrink-0 snap-start"
             >
               <div
                 className="relative aspect-[4/3] w-full overflow-hidden bg-black"
