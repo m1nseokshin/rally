@@ -23,7 +23,7 @@ const bebas = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "Rally — 리듬 탁구 XR",
+  title: "Rally",
   description:
     "음악을 분석해 리듬 탁구 XR 세션을 만들고, 기기를 관리하고, 하루의 집중을 되짚는 앱",
   // 홈/플레이/기기/인사이트/설정 탭을 홈 화면에 설치 가능한 웹앱으로 만든다.

@@ -12,7 +12,7 @@ export const dynamic = "force-static";
 // 같은 소스로 정확한 경로가 나온다.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Rally — 리듬 탁구 XR",
+    name: "Rally",
     short_name: "Rally",
     description:
       "음악을 분석해 리듬 탁구 XR 세션을 만들고, 기기를 관리하고, 하루의 집중을 되짚는 앱",

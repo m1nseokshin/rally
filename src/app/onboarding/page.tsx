@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { useRouter } from "next/navigation";
 import { markOnboardingComplete } from "@/lib/onboarding";
 import { requestTransition } from "@/lib/transition";
-import { IconWave, IconPaddle, IconInsight, IconSpotify } from "@/components/icons";
+import { IconWave, IconPaddle, IconInsight, IconDevice } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useAuth } from "@/lib/auth/useAuth";
 import type { DictKey, Locale } from "@/lib/i18n/dictionary";
@@ -12,39 +12,51 @@ import type { DictKey, Locale } from "@/lib/i18n/dictionary";
 type Step = {
   eyebrowKey: DictKey;
   titleKey: DictKey;
-  descKey: DictKey;
+  /** 마지막 칸(브랜드 마무리)은 설명 없이 한 문장으로 끝난다 */
+  descKey?: DictKey;
   Icon: typeof IconWave;
   bg: string;
+  /** 아이콘 대신 Rally 워드마크를 띄우고 제목을 키운다 */
+  finale?: boolean;
 };
 
+/**
+ * 01 몰입 → 02 음악 → 03 기록 → 04 브랜드.
+ *
+ * 배경은 전부 브랜드 오렌지 계열이다. 예전엔 칸마다 초록(Spotify)·파랑을
+ * 섞었는데, 이 앱의 색 언어는 "무채색 + 오렌지 하나"라서 온보딩에서만
+ * 색이 셋으로 늘면 첫인상부터 규칙이 어긋난다. 대신 그라디언트의 위치와
+ * 깊이를 칸마다 바꿔 변화를 주고, 마지막 칸은 거의 검게 가라앉혀
+ * 워드마크만 남게 했다.
+ */
 const STEPS: Step[] = [
   {
     eyebrowKey: "onboarding.step0.eyebrow",
     titleKey: "onboarding.step0.title",
     descKey: "onboarding.step0.desc",
-    Icon: IconWave,
+    Icon: IconDevice,
     bg: "radial-gradient(120% 90% at 20% 0%, #f24822 0%, #7a1f0c 45%, #111111 100%)",
   },
   {
     eyebrowKey: "onboarding.step1.eyebrow",
     titleKey: "onboarding.step1.title",
     descKey: "onboarding.step1.desc",
-    Icon: IconSpotify,
-    bg: "radial-gradient(120% 90% at 80% 0%, #1eaa52 0%, #0a3d20 45%, #111111 100%)",
+    Icon: IconWave,
+    bg: "radial-gradient(120% 90% at 80% 10%, #ff6a3d 0%, #8a2a10 45%, #111111 100%)",
   },
   {
     eyebrowKey: "onboarding.step2.eyebrow",
     titleKey: "onboarding.step2.title",
     descKey: "onboarding.step2.desc",
-    Icon: IconPaddle,
+    Icon: IconInsight,
     bg: "radial-gradient(120% 90% at 20% 100%, #f24822 0%, #4a0f05 45%, #111111 100%)",
   },
   {
     eyebrowKey: "onboarding.step3.eyebrow",
     titleKey: "onboarding.step3.title",
-    descKey: "onboarding.step3.desc",
-    Icon: IconInsight,
-    bg: "radial-gradient(120% 90% at 80% 100%, #1151ff 0%, #0a1d5c 45%, #111111 100%)",
+    Icon: IconPaddle,
+    bg: "radial-gradient(140% 100% at 50% 120%, #c9330f 0%, #2a0a03 40%, #000000 100%)",
+    finale: true,
   },
 ];
 
@@ -405,9 +417,15 @@ function StepsCarousel() {
               className="flex h-full flex-col items-center justify-center"
               style={{ width: `${100 / STEPS.length}%` }}
             >
-              <span className="flex size-32 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm">
-                <s.Icon size={56} className="text-white" />
-              </span>
+              {s.finale ? (
+                // 마지막 칸은 기능 설명이 아니라 브랜드로 닫는다 —
+                // 아이콘을 하나 더 띄우면 "네 번째 기능"처럼 읽힌다.
+                <p className="type-display text-[72px] leading-none text-white">Rally</p>
+              ) : (
+                <span className="flex size-32 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm">
+                  <s.Icon size={56} className="text-white" />
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -420,12 +438,18 @@ function StepsCarousel() {
         <p className="type-eyebrow text-[12px] font-medium uppercase text-primary">
           {t(STEPS[step].eyebrowKey)}
         </p>
-        <h1 className="type-display mt-2 whitespace-pre-line text-[36px] leading-[1.05] text-white">
+        <h1
+          className={`type-display mt-2 whitespace-pre-line leading-[1.05] text-white ${
+            STEPS[step].finale ? "text-[44px]" : "text-[36px]"
+          }`}
+        >
           {t(STEPS[step].titleKey)}
         </h1>
-        <p className="mt-3 text-[14px] leading-relaxed text-white/70">
-          {t(STEPS[step].descKey)}
-        </p>
+        {STEPS[step].descKey && (
+          <p className="mt-3 text-[14px] leading-relaxed text-white/70">
+            {t(STEPS[step].descKey)}
+          </p>
+        )}
 
         {/* 페이지 도트 — 드래그 중엔 손가락이 가리키는 칸을 실시간으로 보여준다 */}
         <div className="mt-6 flex gap-1.5">

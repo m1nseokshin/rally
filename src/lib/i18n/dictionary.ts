@@ -354,21 +354,20 @@ export const dictionary = {
     "onboarding.skip": "건너뛰기",
     "onboarding.next": "다음",
     "onboarding.start": "시작하기",
-    "onboarding.step0.eyebrow": "Rally에 오신 걸 환영해요",
-    "onboarding.step0.title": "음악으로 치는\n리듬 탁구",
-    "onboarding.step0.desc": "듣던 곡의 박자에 맞춰 랠리를 주고받는 XR 탁구 게임이에요.",
-    "onboarding.step1.eyebrow": "Step 1",
-    "onboarding.step1.title": "Spotify 연동하고\nAI 분석",
+    "onboarding.step0.eyebrow": "01",
+    "onboarding.step0.title": "XR 세상으로\n빠져들어보세요",
+    "onboarding.step0.desc":
+      "현실의 공간을 넘어, 새로운 탁구 코트에서 나만의 랠리를 시작해요.",
+    "onboarding.step1.eyebrow": "02",
+    "onboarding.step1.title": "좋아하는 음악을\n선택하세요",
     "onboarding.step1.desc":
-      "듣는 곡을 그대로 가져와 BPM과 랠리 포인트를 분석해요. 곡을 직접 검색해서 고를 수도 있어요.",
-    "onboarding.step2.eyebrow": "Step 2",
-    "onboarding.step2.title": "카메라로\n라켓을 휘둘러요",
+      "음악의 리듬이 랠리에 맞춰져요. 듣고 보고 움직이며 리듬을 따라 랠리를 이어가요.",
+    "onboarding.step2.eyebrow": "03",
+    "onboarding.step2.title": "오늘의 플레이를\n확인하세요",
     "onboarding.step2.desc":
-      "손을 인식해 3D 라켓이 그대로 따라 움직여요. 박자에 맞춰 쳐내면 점수가 쌓여요.",
-    "onboarding.step3.eyebrow": "Step 3",
-    "onboarding.step3.title": "하루의 집중을\n되짚어봐요",
-    "onboarding.step3.desc":
-      "세션마다 집중도와 정확도를 기록해서, 언제 가장 몰입했는지 알려드려요.",
+      "플레이가 끝나면 나의 집중과 움직임이 기록돼요. 지난 플레이와 비교해볼 수 있어요.",
+    "onboarding.step3.eyebrow": "04",
+    "onboarding.step3.title": "이 모든 것\nRally에서",
 
     // 랠리(XR 게임)
     "rally.defaultTitle": "선택한 곡",
@@ -738,21 +737,20 @@ export const dictionary = {
     "onboarding.skip": "Skip",
     "onboarding.next": "Next",
     "onboarding.start": "Get started",
-    "onboarding.step0.eyebrow": "Welcome to Rally",
-    "onboarding.step0.title": "Table tennis,\nplayed to music",
-    "onboarding.step0.desc": "An XR table tennis game where you rally to the beat of your music.",
-    "onboarding.step1.eyebrow": "Step 1",
-    "onboarding.step1.title": "Connect Spotify\nfor AI analysis",
+    "onboarding.step0.eyebrow": "01",
+    "onboarding.step0.title": "Step into\nthe XR world",
+    "onboarding.step0.desc":
+      "Past the walls of the room you're in, a new court opens up. Start a rally of your own.",
+    "onboarding.step1.eyebrow": "02",
+    "onboarding.step1.title": "Pick the music\nyou love",
     "onboarding.step1.desc":
-      "We pull in what you're listening to and analyze BPM and rally points. You can also search and pick a track yourself.",
-    "onboarding.step2.eyebrow": "Step 2",
-    "onboarding.step2.title": "Swing your\npaddle on camera",
+      "The rally falls into step with your music. Listen, watch, move - and keep the rally alive.",
+    "onboarding.step2.eyebrow": "03",
+    "onboarding.step2.title": "See how today\nplayed out",
     "onboarding.step2.desc":
-      "We recognize your hand and the 3D paddle follows it in real time. Hit the ball on the beat to score.",
-    "onboarding.step3.eyebrow": "Step 3",
-    "onboarding.step3.title": "Look back on\nyour daily focus",
-    "onboarding.step3.desc":
-      "Every session logs your focus and accuracy, so you know exactly when you were most locked in.",
+      "When you finish, your focus and movement are logged so you can hold today up against the days before.",
+    "onboarding.step3.eyebrow": "04",
+    "onboarding.step3.title": "All of it,\non Rally",
 
     "rally.defaultTitle": "Selected track",
     "rally.spotify.noPermission":
