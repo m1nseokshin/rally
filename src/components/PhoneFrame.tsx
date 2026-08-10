@@ -30,37 +30,22 @@ export default function PhoneFrame({
   /** 온보딩처럼 탭 화면이 아닌 전용 플로우에선 하단 탭바를 숨긴다 */
   hideTabBar?: boolean;
 }) {
-  const outerRef = useRef<HTMLDivElement>(null);
   const scalerRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<HTMLDivElement>(null);
 
   useIsomorphicLayoutEffect(() => {
-    const outer = outerRef.current;
     const el = scalerRef.current;
-    const frame = frameRef.current;
-    if (!outer || !el || !frame) return;
+    if (!el) return;
 
     const fit = () => {
       const { innerWidth: w, innerHeight: h } = window;
 
-      // iOS 홈 화면에 추가한 스탠드얼론 PWA에서 100dvh가 실제 화면 높이보다
-      // 살짝 작게 잡히는 경우가 있다 — 그러면 프레임이 진짜 화면 아래까지
-      // 못 닿고, 그 틈으로 배경(흰색)이 그대로 보인다. 탭바 색이 배경과
-      // 같아서 경계가 안 보일 뿐 여백은 실재한다. window.innerHeight를
-      // 직접 재서 픽셀로 박아 넣는 게 dvh보다 신뢰할 수 있다 — standalone
-      // 모드의 실제 가시 높이를 그대로 반영하기 때문이다.
-      outer.style.height = `${h}px`;
-
-      // 실기기 폭에선 프레임을 쓰지 않으므로 축소도, 높이 강제도 안 한다 —
-      // PC 프레임 모드의 고정 874px(md:h-[874px])을 이 인라인 스타일이
-      // 덮어쓰면 안 되기 때문에 여기서만 지운다.
+      // 실기기 폭에선 프레임을 쓰지 않으므로 축소하지 않는다. 높이는 여기서
+      // 강제하지 않는다 — h-full(퍼센트) 체인이 담당한다(아래 설명).
       if (w < FRAME_BP) {
         el.style.setProperty("--s", "1");
-        frame.style.height = `${h}px`;
         return;
       }
 
-      frame.style.removeProperty("height");
       const scale = Math.min(
         1,
         (h - GUTTER) / (DEVICE_H + BEZEL),
@@ -72,8 +57,6 @@ export default function PhoneFrame({
     fit();
     window.addEventListener("resize", fit);
     window.addEventListener("orientationchange", fit);
-    // 스탠드얼론 사파리는 주소창이 없어 resize가 안 나가는 경우가 있다 —
-    // visualViewport가 더 안정적으로 신호를 준다
     window.visualViewport?.addEventListener("resize", fit);
     return () => {
       window.removeEventListener("resize", fit);
@@ -83,13 +66,24 @@ export default function PhoneFrame({
   }, []);
 
   return (
-    <div
-      ref={outerRef}
-      className="flex h-dvh w-full items-center justify-center overflow-hidden bg-canvas md:bg-cloud"
-    >
+    // 높이를 dvh나 window.innerHeight로 재지 않는다 — iOS 26부터 Safari가
+    // 툴바를 "떠 있는" 방식으로 그리면서, 스탠드얼론(홈 화면 추가) 상태에서도
+    // 그 둘 다 실제 화면보다 짧게 보고하는 경우가 보고되고 있다(둘 다 같은
+    // 내부 측정치에 기대는 값이라 같이 틀린다). 이 div가 짧아지면 바깥의
+    // items-center가 그 부족분을 위아래로 반씩 나눠 빈 여백을 만든다 —
+    // 위/아래에 대칭으로 잘리는 게 정확히 그 증상이다.
+    // 대신 html,body의 height:100%를 그대로 물려받는 퍼센트 체인을 쓴다.
+    // 이건 브라우저가 실제로 박스를 배치할 때 쓰는 핵심 레이아웃 경로라,
+    // 저 새로 생긴 버그가 낀 리포팅 API(dvh 단위·innerHeight 프로퍼티)를
+    // 아예 거치지 않는다.
+    <div className="flex h-full w-full items-center justify-center overflow-hidden bg-canvas md:bg-cloud">
       <div
         ref={scalerRef}
-        className="origin-center"
+        // h-full — items-center가 교차축 stretch를 꺼버려서, 이 div가 퍼센트
+        // 높이를 안 받으면 안쪽 frame/main의 h-full·flex-1이 전부 "auto"로
+        // 풀려 콘텐츠 높이만큼 끝없이 늘어난다(실측: 1537px). 여기서 한 번
+        // 더 이어줘야 퍼센트 체인이 frame까지 안전하게 내려간다.
+        className="h-full origin-center"
         style={{ transform: "scale(var(--s, 1))" }}
       >
         {/*
@@ -97,11 +91,14 @@ export default function PhoneFrame({
           이게 없으면 바텀시트(fixed inset-0)의 기준이 바깥 scaler가 돼서,
           프레임의 overflow-hidden과 둥근 모서리를 무시하고 폰 화면 밖으로
           삐져나온다. translateZ(0)은 렌더링 결과를 바꾸지 않으면서
-          컨테이닝 블록만 만들어 주는 표준 수법이다.
+          컨테이닝 블록만 만들어 주는 표준 수법이다. 덤으로 이 프레임 안의
+          바텀시트(fixed inset-0)는 진짜 뷰포트가 아니라 이 컨테이너에 대해
+          고정되므로, iOS 26의 "떠 있는 툴바 아래로 fixed 요소가 못 내려간다"
+          버그도 원천적으로 비껴간다 — 애초에 브라우저 뷰포트 기준 fixed가
+          아니기 때문이다.
         */}
         <div
-          ref={frameRef}
-          className="relative flex h-dvh w-screen flex-col overflow-hidden bg-canvas md:h-[874px] md:w-[402px] md:rounded-[54px] md:shadow-[0_0_0_11px_#111111,0_28px_60px_-12px_rgba(0,0,0,0.4)]"
+          className="relative flex h-full w-screen flex-col overflow-hidden bg-canvas md:h-[874px] md:w-[402px] md:rounded-[54px] md:shadow-[0_0_0_11px_#111111,0_28px_60px_-12px_rgba(0,0,0,0.4)]"
           style={{ transform: "translateZ(0)" }}
         >
           {/* overflow-x-hidden — 상세 페이지가 오른쪽에서 밀려 들어올 때
