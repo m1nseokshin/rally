@@ -109,8 +109,9 @@ export default function DeviceScanSheet({
         className="absolute inset-0 bg-black/50"
       />
       <div
-        className="sheet-in relative flex max-h-[80dvh] w-full max-w-[402px] flex-col bg-canvas p-4 pb-6"
+        className="sheet-in relative flex max-h-[80dvh] w-full max-w-[402px] flex-col bg-canvas p-4"
         style={{
+          paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))",
           borderTopLeftRadius: "var(--radius-panel)",
           borderTopRightRadius: "var(--radius-panel)",
           boxShadow: "var(--shadow-elevated)",

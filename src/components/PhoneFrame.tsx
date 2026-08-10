@@ -30,21 +30,37 @@ export default function PhoneFrame({
   /** 온보딩처럼 탭 화면이 아닌 전용 플로우에선 하단 탭바를 숨긴다 */
   hideTabBar?: boolean;
 }) {
+  const outerRef = useRef<HTMLDivElement>(null);
   const scalerRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
 
   useIsomorphicLayoutEffect(() => {
+    const outer = outerRef.current;
     const el = scalerRef.current;
-    if (!el) return;
+    const frame = frameRef.current;
+    if (!outer || !el || !frame) return;
 
     const fit = () => {
       const { innerWidth: w, innerHeight: h } = window;
 
-      // 실기기 폭에선 프레임을 쓰지 않으므로 축소도 하지 않는다
+      // iOS 홈 화면에 추가한 스탠드얼론 PWA에서 100dvh가 실제 화면 높이보다
+      // 살짝 작게 잡히는 경우가 있다 — 그러면 프레임이 진짜 화면 아래까지
+      // 못 닿고, 그 틈으로 배경(흰색)이 그대로 보인다. 탭바 색이 배경과
+      // 같아서 경계가 안 보일 뿐 여백은 실재한다. window.innerHeight를
+      // 직접 재서 픽셀로 박아 넣는 게 dvh보다 신뢰할 수 있다 — standalone
+      // 모드의 실제 가시 높이를 그대로 반영하기 때문이다.
+      outer.style.height = `${h}px`;
+
+      // 실기기 폭에선 프레임을 쓰지 않으므로 축소도, 높이 강제도 안 한다 —
+      // PC 프레임 모드의 고정 874px(md:h-[874px])을 이 인라인 스타일이
+      // 덮어쓰면 안 되기 때문에 여기서만 지운다.
       if (w < FRAME_BP) {
         el.style.setProperty("--s", "1");
+        frame.style.height = `${h}px`;
         return;
       }
 
+      frame.style.removeProperty("height");
       const scale = Math.min(
         1,
         (h - GUTTER) / (DEVICE_H + BEZEL),
@@ -55,11 +71,22 @@ export default function PhoneFrame({
 
     fit();
     window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
+    window.addEventListener("orientationchange", fit);
+    // 스탠드얼론 사파리는 주소창이 없어 resize가 안 나가는 경우가 있다 —
+    // visualViewport가 더 안정적으로 신호를 준다
+    window.visualViewport?.addEventListener("resize", fit);
+    return () => {
+      window.removeEventListener("resize", fit);
+      window.removeEventListener("orientationchange", fit);
+      window.visualViewport?.removeEventListener("resize", fit);
+    };
   }, []);
 
   return (
-    <div className="flex h-dvh w-full items-center justify-center overflow-hidden bg-canvas md:bg-cloud">
+    <div
+      ref={outerRef}
+      className="flex h-dvh w-full items-center justify-center overflow-hidden bg-canvas md:bg-cloud"
+    >
       <div
         ref={scalerRef}
         className="origin-center"
@@ -73,6 +100,7 @@ export default function PhoneFrame({
           컨테이닝 블록만 만들어 주는 표준 수법이다.
         */}
         <div
+          ref={frameRef}
           className="relative flex h-dvh w-screen flex-col overflow-hidden bg-canvas md:h-[874px] md:w-[402px] md:rounded-[54px] md:shadow-[0_0_0_11px_#111111,0_28px_60px_-12px_rgba(0,0,0,0.4)]"
           style={{ transform: "translateZ(0)" }}
         >
