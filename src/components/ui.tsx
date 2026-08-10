@@ -246,11 +246,8 @@ export function ActionSheet<T extends string>({
         className="absolute inset-0 bg-black/50"
       />
       <div
-        className="sheet-in relative w-full max-w-[402px] bg-canvas p-4"
+        className="sheet-in relative w-full max-w-[402px] bg-canvas p-4 pb-6"
         style={{
-          // 안전영역까지 챙겨야 홈 인디케이터와 시트 사이에 빈 여백이
-          // 안 남는다 — 고정 pb-6는 노치 기기에서 그 여백을 못 채운다.
-          paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))",
           borderTopLeftRadius: "var(--radius-panel)",
           borderTopRightRadius: "var(--radius-panel)",
           boxShadow: "var(--shadow-elevated)",

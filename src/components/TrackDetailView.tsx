@@ -190,13 +190,8 @@ export default function TrackDetailView({
 
       </div>
 
-      {/* 하단 액션 — TrackDetailView는 TabBar를 덮는 전체화면 오버레이라
-          안전영역을 스스로 챙겨야 한다. 안 챙기면 버튼 줄과 홈 인디케이터
-          사이에 배경색과 같아 안 보이는 빈 여백이 남는다. */}
-      <div
-        className="shrink-0 border-t border-hairline-soft p-4"
-        style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
-      >
+      {/* 하단 액션 */}
+      <div className="shrink-0 border-t border-hairline-soft p-4">
         <div className="flex gap-2">
           <button
             type="button"

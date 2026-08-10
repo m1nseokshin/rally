@@ -148,10 +148,7 @@ export default function TrackFilterSheet({
         {/* 결과 개수를 시트 안에서 실시간으로 보여준다 — 필터를 바꿀 때마다
             뒤에서 목록이 다시 불려오는데, 시트에 가려 안 보이면 반응이
             없는 것처럼 느껴진다 */}
-        <div
-          className="shrink-0 border-t border-hairline-soft p-4"
-          style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
-        >
+        <div className="shrink-0 border-t border-hairline-soft p-4">
           <div className="mb-3 flex h-5 items-center justify-center gap-2">
             {loading ? (
               <>

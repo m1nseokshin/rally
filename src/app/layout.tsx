@@ -64,8 +64,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  // 노치/다이나믹 아일랜드가 있는 실기기에서 safe-area 값을 받으려면 필요
-  viewportFit: "cover",
+  // viewport-fit: cover는 일부러 안 쓴다. 이걸 켜면 콘텐츠가 노치·홈
+  // 인디케이터 영역까지 직접 확장되고, 그 이후로는 env(safe-area-inset-*)를
+  // 우리가 일일이 계산해서 되돌려 막아야 한다 — iOS 26에서 바로 그 계산
+  // 경로(safe-area 로직 자체)가 고장 나서, 탭바가 화면 끝에 안 닿고 뜨는
+  // 증상으로 나타났다. 이 옵션을 안 켜면 Safari가 애초에 콘텐츠를 안전
+  // 영역 안에만 그려서, 우리가 뭘 계산할 필요 자체가 없어진다.
 };
 
 // 저장된 테마를 첫 페인트 전에 <html>에 반영 — React가 하이드레이션하기

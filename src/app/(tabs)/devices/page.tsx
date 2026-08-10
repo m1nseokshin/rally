@@ -271,9 +271,8 @@ function DeviceDetailSheet({
         className="absolute inset-0 bg-black/50"
       />
       <div
-        className="sheet-in relative w-full max-w-[402px] bg-canvas p-4"
+        className="sheet-in relative w-full max-w-[402px] bg-canvas p-4 pb-6"
         style={{
-          paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))",
           borderTopLeftRadius: "var(--radius-panel)",
           borderTopRightRadius: "var(--radius-panel)",
           boxShadow: "var(--shadow-elevated)",
