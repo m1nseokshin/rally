@@ -190,8 +190,12 @@ export default function TrackDetailView({
 
       </div>
 
-      {/* 하단 액션 */}
-      <div className="shrink-0 border-t border-hairline-soft p-4">
+      {/* 하단 액션 — iOS는 화면 맨 아래 얇은 띠가 홈 인디케이터 제스처
+          영역이라, 버튼이 거기 걸치면 탭이 시스템 제스처로 먹혀 안 눌린다.
+          pb-4만으로는 그 띠를 못 벗어나서 고정 여백을 더 준다.
+          env(safe-area-inset-bottom)는 안 쓴다 — iOS 26에서 그 값 자체가
+          믿을 수 없게 돼서 걷어냈던 바로 그 문제라 다시 안 쓴다. */}
+      <div className="shrink-0 border-t border-hairline-soft p-4 pb-8">
         <div className="flex gap-2">
           <button
             type="button"
