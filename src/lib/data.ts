@@ -103,24 +103,13 @@ export const devices: Device[] = [
   },
   {
     id: "d2",
-    name: "라켓 R",
+    name: "Rally Paddle Pro",
     kind: "paddle",
     model: "Rally Paddle Pro",
     connected: true,
     battery: 64,
     firmware: "v1.8.0",
     latencyMs: 12,
-  },
-  {
-    id: "d3",
-    name: "라켓 L",
-    kind: "paddle",
-    model: "Rally Paddle Pro",
-    connected: false,
-    battery: 0,
-    firmware: "v1.7.2",
-    updateAvailable: true,
-    latencyMs: 14,
   },
 ];
 

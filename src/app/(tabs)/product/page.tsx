@@ -32,8 +32,11 @@ function Cover({
 }) {
   if (src) {
     return (
+      // object-contain — 라켓 손잡이처럼 프레임 대각선 끝까지 걸친 제품
+      // 실물 사진은 object-cover로 채우면 컨테이너 비율과 어긋나는 만큼
+      // 잘려나간다. 여백이 생기더라도 전체가 보이는 쪽을 택한다.
       // eslint-disable-next-line @next/next/no-img-element -- public/ 정적 이미지, next/image 설정 불필요
-      <img src={`${BASE_PATH}${src}`} alt="" className={`${className} object-cover`} />
+      <img src={`${BASE_PATH}${src}`} alt="" className={`${className} object-contain`} />
     );
   }
   return (

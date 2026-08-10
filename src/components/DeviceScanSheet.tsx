@@ -28,16 +28,6 @@ const CANDIDATES: Device[] = [
     firmware: "v4.0.1",
   },
   {
-    id: "d5",
-    name: "라켓 L",
-    kind: "paddle",
-    model: "Rally Paddle Pro",
-    connected: false,
-    battery: 72,
-    firmware: "v1.8.0",
-    latencyMs: 13,
-  },
-  {
     id: "d6",
     name: "Rally Paddle Air",
     kind: "paddle",
