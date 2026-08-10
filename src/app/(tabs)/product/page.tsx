@@ -32,11 +32,11 @@ function Cover({
 }) {
   if (src) {
     return (
-      // object-contain — 라켓 손잡이처럼 프레임 대각선 끝까지 걸친 제품
-      // 실물 사진은 object-cover로 채우면 컨테이너 비율과 어긋나는 만큼
-      // 잘려나간다. 여백이 생기더라도 전체가 보이는 쪽을 택한다.
+      // object-cover로 꽉 채운다 — object-contain은 레터박스 여백이 남아
+      // 별로였다. 대신 소스 이미지 쪽에 여백을 미리 넣어 어느 카드 비율로
+      // 잘려도 제품 자체는 안 잘리게 해뒀다(rally-paddle.png 참고).
       // eslint-disable-next-line @next/next/no-img-element -- public/ 정적 이미지, next/image 설정 불필요
-      <img src={`${BASE_PATH}${src}`} alt="" className={`${className} object-contain`} />
+      <img src={`${BASE_PATH}${src}`} alt="" className={`${className} object-cover`} />
     );
   }
   return (
