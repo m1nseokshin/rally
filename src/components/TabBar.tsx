@@ -28,7 +28,13 @@ export default function TabBar() {
     // 문서 흐름에서 빼내 프레임 바닥에 붙인다. 흐름에 있으면 주소창이
     // 나타났다 사라지며 뷰포트 높이가 변할 때 탭바도 같이 밀려 흔들린다.
     // 프레임이 transform을 갖고 있어 이 absolute의 기준이 정확히 프레임이다.
-    <nav className="absolute inset-x-0 bottom-0 z-20 border-t border-hairline-soft bg-canvas/95 backdrop-blur">
+    //
+    // pb-5(20px) — 실기기 홈 인디케이터가 앉을 자리를 미리 비워 둔다.
+    // env(safe-area-inset-bottom)으로 정확히 재려다 iOS 26에서 그 값 자체가
+    // 고장 나는 걸 겪은 뒤라, 여기서는 기기마다 달라지는 값을 좇지 않고
+    // 넉넉한 고정값 하나로 고정한다 — 아이콘 줄(h-[68px])은 그대로 두고
+    // 그 아래 여백만 늘린 것이라 탭 터치 영역 위치는 그대로다.
+    <nav className="absolute inset-x-0 bottom-0 z-20 border-t border-hairline-soft bg-canvas/95 pb-5 backdrop-blur">
       <ul className="flex h-[68px] items-stretch">
         {tabs.map(({ href, labelKey, Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);

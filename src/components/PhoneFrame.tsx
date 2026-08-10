@@ -103,11 +103,12 @@ export default function PhoneFrame({
         >
           {/* overflow-x-hidden — 상세 페이지가 오른쪽에서 밀려 들어올 때
               화면 밖 영역이 가로 스크롤로 잡히지 않게 막는다.
-              탭바가 흐름에서 빠져 바닥에 고정됐으므로, 그 높이(68px)만큼
-              아래 여백을 줘야 마지막 항목이 안 가린다. */}
+              탭바가 흐름에서 빠져 바닥에 고정됐으므로, 그 전체 높이
+              (아이콘 줄 68px + 홈 인디케이터용 여백 20px, TabBar.tsx 참고)
+              만큼 아래 여백을 줘야 마지막 항목이 안 가린다. */}
           <main
             className="rail flex-1 overflow-y-auto overflow-x-hidden overscroll-contain"
-            style={{ paddingBottom: hideTabBar ? undefined : "68px" }}
+            style={{ paddingBottom: hideTabBar ? undefined : "88px" }}
           >
             {children}
           </main>
