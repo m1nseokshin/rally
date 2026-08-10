@@ -35,6 +35,22 @@ type SpotifyPlayer = {
   removeListener: (event: string, cb?: (arg: never) => void) => void;
 };
 
+/**
+ * Spotify Web Playback SDK는 공식적으로 데스크톱 브라우저만 지원한다.
+ * 모바일(iOS/Android)에서 시도하면 스크립트는 로드되고 player.connect()도
+ * 성공하지만, DRM(EME) 파이프라인이 없어서 "ready" 이벤트가 영영 안 온다 —
+ * 그러다 8초 타임아웃으로 떨어지는 게 실제로 관측된 증상이었다("플레이어
+ * 응답이 없어요"). 이미 안 될 걸 알면서 8초를 태우고 무서운 에러 문구를
+ * 보여주느니, 모바일이면 아예 시도하지 않고 바로 비트 사운드로 넘어간다.
+ */
+export function isPlaybackSdkSupported(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isAndroidOrMobile = /Android|Mobi/i.test(ua);
+  return !isIOS && !isAndroidOrMobile;
+}
+
 let sdkPromise: Promise<void> | null = null;
 
 function loadSdk() {

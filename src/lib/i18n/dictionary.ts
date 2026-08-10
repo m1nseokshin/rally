@@ -375,6 +375,8 @@ export const dictionary = {
     "rally.spotify.noPermission":
       "Spotify 재생 권한이 없어요. 설정 탭에서 연동을 해제하고 다시 연동해주세요.",
     "rally.spotify.fallback": "음원 재생 대신 비트 사운드로 진행해요.",
+    "rally.spotify.mobileUnsupported":
+      "모바일에서는 실제 음원 재생을 지원하지 않아요. 비트 사운드로 진행해요.",
     "rally.ready.eyebrow": "{bpm} BPM · 랠리 준비",
     "rally.ready.instructions.camera": "카메라가 상체를 비추도록 기기를 세워두세요",
     "rally.ready.instructions.hand": "손을 카메라에 비추면 3D 라켓이 손 위치를 그대로 따라와요",
@@ -756,6 +758,8 @@ export const dictionary = {
     "rally.spotify.noPermission":
       "Spotify playback isn't authorized. Disconnect and reconnect in the Settings tab.",
     "rally.spotify.fallback": "Using a beat sound instead of the actual track.",
+    "rally.spotify.mobileUnsupported":
+      "Real track playback isn't available on mobile. Using a beat sound instead.",
     "rally.ready.eyebrow": "{bpm} BPM · Ready to rally",
     "rally.ready.instructions.camera": "Prop up your device so the camera sees your upper body",
     "rally.ready.instructions.hand": "Show your hand to the camera — the 3D paddle follows it",

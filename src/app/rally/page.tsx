@@ -14,7 +14,7 @@ import {
   TARGET_BALL_GAP,
   TRAVEL,
 } from "@/lib/rally/rallyConfig";
-import { createPlayer, type RallyPlayer } from "@/lib/spotify/player";
+import { createPlayer, isPlaybackSdkSupported, type RallyPlayer } from "@/lib/spotify/player";
 import { hasStreamingScope } from "@/lib/spotify/auth";
 import { IconBack, IconStop } from "@/components/icons";
 import RallyScene, { type RallySceneHandle } from "@/components/RallyScene";
@@ -243,6 +243,11 @@ function RallyGame() {
         // streaming 권한 추가 전에 로그인한 토큰이면 시도해봐야 뻔히 실패한다 —
         // SDK를 띄우지 않고 바로 원인을 알려준다.
         setPlayerNote(t("rally.spotify.noPermission"));
+      } else if (!isPlaybackSdkSupported()) {
+        // 모바일은 Web Playback SDK 자체가 지원 대상이 아니다 — 시도하면
+        // "ready" 이벤트가 영영 안 와서 8초 뒤 "플레이어 응답이 없어요"로
+        // 떨어진다. 이미 안 될 걸 아니까 그 8초를 태우지 않는다.
+        setPlayerNote(t("rally.spotify.mobileUnsupported"));
       } else {
         try {
           const player = await createPlayer();
