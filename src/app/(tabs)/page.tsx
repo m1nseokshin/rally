@@ -56,12 +56,16 @@ export default function HomePage() {
             className="tap relative block aspect-[4/5] w-full overflow-hidden bg-black"
             style={{ borderRadius: "var(--radius-panel)" }}
           >
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "radial-gradient(100% 70% at 20% 0%, #1eaa52cc 0%, transparent 60%), linear-gradient(180deg, #1c1c1c 0%, #000 70%)",
-              }}
+            {/* eslint-disable-next-line @next/next/no-img-element -- public/ 정적 이미지 */}
+            <img
+              src={`${BASE_PATH}/images/spotify-connect.png`}
+              alt=""
+              // scale-125 + object-position — 원본엔 하늘 배경이 많아서
+              // object-cover만으로는 얼굴이 카드 위쪽 구석에 작게 걸린다.
+              // 확대하고 기준점을 얼굴 쪽(30% 25%)으로 당겨 얼굴이 카드
+              // 안에서 실제 주인공으로 보이게 했다.
+              className="absolute inset-0 size-full scale-125 object-cover"
+              style={{ objectPosition: "30% 25%" }}
             />
             <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/85 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-6">
