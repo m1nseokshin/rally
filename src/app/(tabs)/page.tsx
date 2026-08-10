@@ -60,12 +60,9 @@ export default function HomePage() {
             <img
               src={`${BASE_PATH}/images/spotify-connect.png`}
               alt=""
-              // scale-125 + object-position — 원본엔 하늘 배경이 많아서
-              // object-cover만으로는 얼굴이 카드 위쪽 구석에 작게 걸린다.
-              // 확대하고 기준점을 얼굴 쪽(30% 25%)으로 당겨 얼굴이 카드
-              // 안에서 실제 주인공으로 보이게 했다.
-              className="absolute inset-0 size-full scale-125 object-cover"
-              style={{ objectPosition: "30% 25%" }}
+              // 이 사진 자체가 4:5라 카드 비율과 정확히 맞는다 — 확대/기준점
+              // 보정 없이 object-cover만으로 잘리는 곳 없이 꽉 찬다.
+              className="absolute inset-0 size-full object-cover"
             />
             <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/85 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-6">
