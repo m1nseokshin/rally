@@ -105,6 +105,25 @@ body {
      URL처럼 진짜 끊을 수밖에 없는 긴 문자열만 예외로 강제 개행한다. */
   word-break: keep-all;
   overflow-wrap: break-word;
+
+  /* 모바일 텍스트 선택 방지. NoContextMenu가 우클릭·롱프레스 메뉴는 막지만,
+     그건 별개로 손가락으로 눌러 끄는 텍스트 선택 자체(과 그 위에 뜨는 복사
+     팝업)는 안 막는다 — 선택은 selectionchange 경로라 contextmenu 차단으로는
+     안 잡힌다. 여기서 선택 자체를 꺼서 애초에 뜰 일이 없게 한다. */
+  -webkit-user-select: none;
+  user-select: none;
+  /* iOS의 길게 누르기 콜아웃(이미지 저장·링크 미리보기 메뉴)도 같이 끈다 —
+     안 그러면 사진 위에서 길게 누르면 선택은 안 돼도 이 메뉴는 그대로 뜬다. */
+  -webkit-touch-callout: none;
+}
+
+/* 입력 필드는 예외 — 여기까지 막으면 아이디/비밀번호나 검색어를 고치거나
+   붙여넣는 게 안 된다. NoContextMenu의 예외 규칙과 같은 이유. */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /*

@@ -3,11 +3,10 @@ import type { DictKey } from "@/lib/i18n/dictionary";
 /**
  * 제품/서비스 소개 — 홈의 레일과 뉴스룸형 상세 페이지가 같이 쓴다.
  *
- * 이미지는 아직 없다. public/products/ 아래에 파일을 넣고 여기 image/hero에
- * 경로만 적으면 자동으로 반영되고, 비워두면 브랜드 그라디언트로 대체된다 —
- * 이미지가 없다고 레이아웃이 깨지지 않게 폴백을 먼저 만들어 뒀다.
- *
- * 예) public/products/vision.jpg 를 넣었다면 image: "/products/vision.jpg"
+ * public/images/ 아래에 파일을 넣고 여기 image/hero에 경로만 적으면 자동으로
+ * 반영된다. image가 목록 썸네일과 상세 히어로 둘 다의 기본값이고, hero를
+ * 따로 주면 상세에서만 다른 이미지를 쓸 수 있다. 비워두면 브랜드 그라디언트로
+ * 대체된다 — 이미지가 없다고 레이아웃이 깨지지 않게 폴백을 먼저 만들어 뒀다.
  * (GitHub Pages 서브패스는 렌더 시점에 BASE_PATH가 붙는다)
  */
 export type ProductSection = {
@@ -40,6 +39,7 @@ export const products: Product[] = [
     eyebrowKey: "product.vision.eyebrow",
     nameKey: "product.vision.name",
     taglineKey: "product.vision.tagline",
+    image: "/images/rally-vision.png",
     cover: ["#f24822", "#7a1f0c"],
     specs: [
       { labelKey: "product.spec.display", valueKey: "product.vision.spec.display" },
@@ -57,6 +57,7 @@ export const products: Product[] = [
     eyebrowKey: "product.paddle.eyebrow",
     nameKey: "product.paddle.name",
     taglineKey: "product.paddle.tagline",
+    image: "/images/rally-paddle.png",
     cover: ["#1151ff", "#0a1d5c"],
     specs: [
       { labelKey: "product.spec.latency", valueKey: "product.paddle.spec.latency" },
