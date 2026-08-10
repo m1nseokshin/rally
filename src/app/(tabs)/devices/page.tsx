@@ -5,6 +5,7 @@ import { devices as seed, type Device } from "@/lib/data";
 import { PageHeader, SectionTitle } from "@/components/ui";
 import { IconDevice, IconPaddle, IconPlus, IconChevron, IconCheck } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
+import { useSheetDrag } from "@/lib/useSheetDrag";
 import DeviceScanSheet from "@/components/DeviceScanSheet";
 
 type CalibrateState = "idle" | "running" | "done";
@@ -260,6 +261,7 @@ function DeviceDetailSheet({
   onForget: () => void;
 }) {
   const { t } = useLocale();
+  const { handleProps, sheetStyle } = useSheetDrag(onClose);
   return (
     <div className="scrim-in fixed inset-0 z-50 flex items-end justify-center">
       <button
@@ -275,9 +277,12 @@ function DeviceDetailSheet({
           borderTopLeftRadius: "var(--radius-panel)",
           borderTopRightRadius: "var(--radius-panel)",
           boxShadow: "var(--shadow-elevated)",
+          ...sheetStyle,
         }}
       >
-        <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-hairline" />
+        <div className="touch-none py-1" {...handleProps}>
+          <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-hairline" />
+        </div>
 
         <p className="type-eyebrow text-[11px] font-medium uppercase text-primary">
           {t("devices.detail.title")}

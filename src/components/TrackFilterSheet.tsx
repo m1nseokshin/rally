@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale } from "@/lib/i18n/useLocale";
+import { useSheetDrag } from "@/lib/useSheetDrag";
 import { MOODS } from "@/lib/spotify/moods";
 import {
   DEFAULT_FILTERS,
@@ -32,6 +33,7 @@ export default function TrackFilterSheet({
 }) {
   const { t } = useLocale();
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
+  const { handleProps, sheetStyle } = useSheetDrag(onClose);
 
   return (
     <div className="scrim-in fixed inset-0 z-50 flex items-end justify-center">
@@ -47,10 +49,13 @@ export default function TrackFilterSheet({
           borderTopLeftRadius: "var(--radius-panel)",
           borderTopRightRadius: "var(--radius-panel)",
           boxShadow: "var(--shadow-elevated)",
+          ...sheetStyle,
         }}
       >
         <div className="shrink-0 px-4 pt-4">
-          <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-hairline" />
+          <div className="touch-none py-1" {...handleProps}>
+            <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-hairline" />
+          </div>
           <div className="mb-2 flex items-baseline justify-between">
             <p className="text-[16px] font-semibold text-ink">{t("play.filter.title")}</p>
             <button

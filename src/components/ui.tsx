@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { IconChevron, IconCheck } from "./icons";
 import { useCountUp } from "@/lib/useCountUp";
+import { useSheetDrag } from "@/lib/useSheetDrag";
 
 /** 0에서 목표 숫자까지 올라가는 표시 — StatTile 안에서만 쓴다 */
 function CountUp({ value }: { value: number }) {
@@ -235,6 +236,7 @@ export function ActionSheet<T extends string>({
   onClose: () => void;
   cancelLabel: string;
 }) {
+  const { handleProps, sheetStyle } = useSheetDrag(onClose);
   return (
     <div className="scrim-in fixed inset-0 z-50 flex items-end justify-center">
       <button
@@ -252,9 +254,15 @@ export function ActionSheet<T extends string>({
           borderTopLeftRadius: "var(--radius-panel)",
           borderTopRightRadius: "var(--radius-panel)",
           boxShadow: "var(--shadow-elevated)",
+          ...sheetStyle,
         }}
       >
-        <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-hairline" />
+        {/* 손잡이 — 여기서 아래로 끌면 손가락을 그대로 따라오다가 놓는 순간
+            닫힘/복귀가 정해진다. 목록(옵션 버튼들)까지 드래그 영역으로
+            잡으면 탭이 드래그로 오인될 수 있어 손잡이만 잡는다. */}
+        <div className="touch-none py-1" {...handleProps}>
+          <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-hairline" />
+        </div>
         <p className="type-caption mb-2 px-2 text-[12px] font-medium text-mute">{title}</p>
         <div className="overflow-hidden" style={{ borderRadius: "var(--radius-card)" }}>
           {options.map((opt) => {

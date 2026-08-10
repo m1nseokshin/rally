@@ -9,7 +9,7 @@ import {
   IconPaddle,
   IconInsight,
   IconDevice,
-  LogoWordmarkWhite,
+  LogoWordmark,
 } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useAuth } from "@/lib/auth/useAuth";
@@ -128,17 +128,15 @@ export default function OnboardingPage() {
 }
 
 /**
- * 1) 스플래시 — 브랜드 워드마크만 잠깐 보여준다.
+ * 1) 스플래시 — 흰 화면에 로고만 잠깐 보여준다.
  *
- * 예전엔 .type-display로 "Rally"를 폰트 렌더링했는데, 이제 실제 로고 파일의
- * 벡터를 그대로 쓴다 — 마크와 글자 사이 간격이 브랜드 자산과 완전히 같아진다.
+ * 태그라인도 뺐다 — 로고 하나만 남겨야 "브랜드가 뜬다"는 순간이 깨끗하게
+ * 읽힌다. 배경이 흰색이라 로고도 검정 버전으로 바꿨다.
  */
 function Splash() {
-  const { t } = useLocale();
   return (
-    <div className="flex h-full flex-col items-center justify-center bg-black">
-      <LogoWordmarkWhite width={200} />
-      <p className="type-caption mt-4 text-[13px] text-white/50">{t("splash.tagline")}</p>
+    <div className="flex h-full flex-col items-center justify-center bg-white">
+      <LogoWordmark width={200} color="#111111" />
     </div>
   );
 }

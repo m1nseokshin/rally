@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Device } from "@/lib/data";
 import { IconCheck, IconDevice, IconPaddle } from "@/components/icons";
 import { useLocale } from "@/lib/i18n/useLocale";
+import { useSheetDrag } from "@/lib/useSheetDrag";
 
 /**
  * 주변 기기 검색 시트 — 에어드롭처럼 하단에서 올라와, 레이더가 도는 동안
@@ -100,6 +101,8 @@ export default function DeviceScanSheet({
     timersRef.current.push(id);
   }
 
+  const { handleProps, sheetStyle } = useSheetDrag(onClose);
+
   return (
     <div className="scrim-in fixed inset-0 z-50 flex items-end justify-center">
       <button
@@ -115,9 +118,12 @@ export default function DeviceScanSheet({
           borderTopLeftRadius: "var(--radius-panel)",
           borderTopRightRadius: "var(--radius-panel)",
           boxShadow: "var(--shadow-elevated)",
+          ...sheetStyle,
         }}
       >
-        <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-hairline" />
+        <div className="touch-none py-1" {...handleProps}>
+          <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-hairline" />
+        </div>
 
         {/* 레이더 — 파장이 계속 퍼지며 "찾고 있다"를 보여준다 */}
         <div className="flex flex-col items-center py-4">

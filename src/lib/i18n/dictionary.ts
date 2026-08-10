@@ -335,9 +335,6 @@ export const dictionary = {
     "login.error.invalid": "아이디 또는 비밀번호가 올바르지 않아요.",
     "login.error.exists": "이미 가입된 아이디예요.",
     "login.back": "뒤로",
-    "settings.account.loginMethod": "로그인 방법",
-    "settings.account.notLoggedIn": "로그인이 필요해요",
-    "settings.account.emailLabel": "이메일 계정",
 
     // Spotify 콜백
     "callback.cancelled": "연동을 취소했어요.",
@@ -348,7 +345,6 @@ export const dictionary = {
     "callback.connecting": "Spotify 연동 중…",
 
     // 스플래시
-    "splash.tagline": "음악으로 치는 리듬 탁구",
 
     // 온보딩 — 언어 선택
     "onboarding.language.eyebrow": "언어 선택",
@@ -722,12 +718,8 @@ export const dictionary = {
     "login.error.invalid": "Incorrect ID or password.",
     "login.error.exists": "That ID is already registered.",
     "login.back": "Back",
-    "settings.account.loginMethod": "Sign-in method",
-    "settings.account.notLoggedIn": "Not logged in",
-    "settings.account.emailLabel": "Email account",
 
     // Splash
-    "splash.tagline": "Table tennis, played to music",
 
     // Onboarding — language picker
     "onboarding.language.eyebrow": "Choose a language",

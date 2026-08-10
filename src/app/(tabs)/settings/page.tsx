@@ -20,7 +20,7 @@ export default function SettingsPage() {
   const { setting, setTheme } = useTheme();
   const { locale, setLocale, t } = useLocale();
   const displayName = useDisplayName();
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const { plan, setPlan } = usePlan();
   const { difficulty, notification, setDifficulty, setNotification } = useSessionPrefs();
   // 재생 권한(streaming) 추가 전에 연동한 계정이면 다시 연동해야
@@ -75,11 +75,6 @@ export default function SettingsPage() {
           label={t("settings.account.plan")}
           value={planLabel}
           onClick={() => setPlanSheet(true)}
-        />
-        <Row
-          label={t("settings.account.loginMethod")}
-          value={user ? t("settings.account.emailLabel") : t("settings.account.notLoggedIn")}
-          onClick={user ? signOut : () => router.push("/login")}
         />
       </section>
 
