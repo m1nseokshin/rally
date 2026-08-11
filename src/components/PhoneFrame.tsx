@@ -79,11 +79,25 @@ export default function PhoneFrame({
     <div className="flex h-full w-full items-center justify-center overflow-hidden bg-canvas md:bg-cloud">
       <div
         ref={scalerRef}
-        // h-full — items-center가 교차축 stretch를 꺼버려서, 이 div가 퍼센트
-        // 높이를 안 받으면 안쪽 frame/main의 h-full·flex-1이 전부 "auto"로
-        // 풀려 콘텐츠 높이만큼 끝없이 늘어난다(실측: 1537px). 여기서 한 번
-        // 더 이어줘야 퍼센트 체인이 frame까지 안전하게 내려간다.
-        className="h-full origin-center"
+        // h-full은 실기기(폭 <768)에서만 필요하다 — items-center가 교차축
+        // stretch를 꺼버려서, 이 div가 퍼센트 높이를 안 받으면 안쪽
+        // frame/main의 h-full·flex-1이 전부 "auto"로 풀려 콘텐츠 높이만큼
+        // 끝없이 늘어난다(실측: 1537px). 퍼센트 체인을 여기서 한 번 더
+        // 이어줘야 frame까지 안전하게 내려간다.
+        //
+        // md+(프레임 모드)에서는 반대로 h-full이 독이 된다 — 이 div가
+        // outer의 실제 높이(뷰포트 높이, 예: 550px)를 그대로 떠안는데, 안의
+        // frame은 항상 고정 874px다. scale은 그 874px 기준으로 정확히
+        // 계산되지만, transform-origin(center)은 "이 div 자신의 박스"
+        // 기준으로 잡혀서 550px 박스의 중심(275px)에서 회전·축소가
+        // 일어난다 — 874px 프레임의 진짜 중심(437px)이 아니다. 뷰포트가
+        // 874px보다 짧을수록 이 둘의 차이가 커져서, 프레임이 위로 쏠리고
+        // 아래가 뷰포트 밖으로 밀려나 잘리는 게 실측됐다. md+에선 h-auto로
+        // 바꿔 이 div가 874px 프레임 크기 그대로 감싸게 하면, outer의
+        // items-center·justify-center가 그 874px 박스를 정확히 중앙에
+        // 놓고, transform-origin도 같은 874px 박스 중심을 쓰게 돼 어느
+        // 뷰포트 크기에서도 대칭으로 축소된다.
+        className="h-full origin-center md:h-auto"
         style={{ transform: "scale(var(--s, 1))" }}
       >
         {/*
