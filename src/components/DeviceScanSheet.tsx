@@ -12,7 +12,7 @@ import { useSheetDrag } from "@/lib/useSheetDrag";
  *
  * 실제 블루투스 스캔이 아니라 연출이다. 웹에서 임의의 BLE 기기를 훑어보는
  * API는 없고(Web Bluetooth는 사용자가 기기를 직접 고르는 창을 띄우는 방식),
- * 애초에 Rally Vision·Paddle은 아직 존재하지 않는 하드웨어다.
+ * 애초에 RALLY Glass·Blade는 아직 존재하지 않는 하드웨어다.
  * 그래서 "찾는 척"이 아니라 흐름을 보여주는 목업으로 만들었다.
  */
 
@@ -20,18 +20,18 @@ import { useSheetDrag } from "@/lib/useSheetDrag";
 const CANDIDATES: Device[] = [
   {
     id: "d4",
-    name: "Rally Vision 2",
+    name: "RALLY Glass 2",
     kind: "xr",
-    model: "Rally Vision Gen 2",
+    model: "RALLY Glass Gen 2",
     connected: false,
     battery: 88,
     firmware: "v4.0.1",
   },
   {
     id: "d6",
-    name: "Rally Paddle Air",
+    name: "RALLY Blade Air",
     kind: "paddle",
-    model: "Rally Paddle Air",
+    model: "RALLY Blade Air",
     connected: false,
     battery: 54,
     firmware: "v1.2.4",

@@ -94,18 +94,18 @@ export const tracks: Track[] = [
 export const devices: Device[] = [
   {
     id: "d1",
-    name: "Rally Vision",
+    name: "RALLY Glass",
     kind: "xr",
-    model: "Quest 3",
+    model: "RALLY Glass",
     connected: true,
     battery: 82,
     firmware: "v3.2.1",
   },
   {
     id: "d2",
-    name: "Rally Paddle Pro",
+    name: "RALLY Blade",
     kind: "paddle",
-    model: "Rally Paddle Pro",
+    model: "RALLY Blade",
     connected: true,
     battery: 64,
     firmware: "v1.8.0",
