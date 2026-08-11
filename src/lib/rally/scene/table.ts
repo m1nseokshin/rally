@@ -106,16 +106,20 @@ export function createTableWireframe(): { group: THREE.Group; dispose: () => voi
     seg(legs, -WALL_W, y, WALL_Z, WALL_W, y, WALL_Z);
   }
 
+  // 흰 선이었던 프레임/메시/다리는 예전 검정 배경 기준이다 — 배경을
+  // 은은한 화이트(#f5f5f5)로 바꾸면서 흰 선이 거의 안 보이게 돼, 잉크
+  // 색으로 뒤집었다. 대비가 배경-선 관계로 정해지는 값들이라 검정
+  // 배경일 때 흰 선이 보이던 것과 같은 이치로 그대로 읽힌다.
   const objects = [
     buildLines(accent, 0xf24822, 0.95),
-    buildLines(frame, 0xffffff, 0.55),
-    buildLines(mesh, 0xffffff, 0.2),
-    buildLines(legs, 0xffffff, 0.12),
+    buildLines(frame, 0x111111, 0.55),
+    buildLines(mesh, 0x111111, 0.2),
+    buildLines(legs, 0x111111, 0.12),
   ];
   for (const o of objects) group.add(o);
 
   // 바닥 그리드 — 탁구대가 허공에 떠 있지 않다는 감각만 주는 정도로 아주 흐리게
-  const grid = new THREE.GridHelper(24, 24, 0xffffff, 0xffffff);
+  const grid = new THREE.GridHelper(24, 24, 0x111111, 0x111111);
   grid.position.y = LEG_BOTTOM_Y;
   const gridMat = grid.material as THREE.Material;
   gridMat.transparent = true;

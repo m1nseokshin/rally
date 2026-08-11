@@ -324,15 +324,34 @@ function RallyGame() {
   }, [stage, accuracy, maxCombo, title, addSession]);
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-black">
-      {/* 카메라 배경 */}
-      <video
-        ref={videoRef}
-        playsInline
-        muted
-        className="absolute inset-0 size-full scale-x-[-1] object-cover"
-      />
-      <div className="absolute inset-0 bg-black/45" />
+    // 은은한 화이트 — 카메라를 배경 전체에 안 띄우기로 하면서 검정 배경만
+    // 남으면 살풍경해서, 라이트 테마의 --color-cloud와 같은 톤(#f5f5f5)을
+    // 항상 고정으로 쓴다. 다크 테마에서도 이 화면만은 밝게 유지하려는
+    // 의도라 토큰이 아니라 리터럴 값이다(ready/done 오버레이는 여전히
+    // 자체 black/70·90 배경이라 이 색 위에서도 그대로 어둡게 보인다).
+    <div className="relative h-dvh w-full overflow-hidden bg-[#f5f5f5]">
+      {/* 카메라 미리보기 — 예전엔 화면 전체를 채워 AR 합성처럼 보였는데,
+          정작 보여줄 건 라인 탁구대와 공이지 내 방이 아니라서 정신없기만
+          했다. 손 추적용으로 스트림은 계속 필요하니 video 자체는 그대로
+          두고, 우측 하단에 작은 셀프뷰 창으로만 띄운다. z-index를 명시해야
+          RallyScene 캔버스나 HUD보다 항상 위에 그려진다(다들 z-index를
+          안 쓰니 DOM 순서로만 쌓이는데, 이 video는 그 순서보다 앞서 있어
+          숫자 z-index 없인 뒤로 깔린다).
+          ready/done 화면엔 자체 전체화면 오버레이(안내문·결과)가 이미
+          바닥까지 차 있어서, 우측 하단 CTA 버튼과 겹친다 — 실제 랠리가
+          진행되는 playing 단계에서만 띄운다. */}
+      <div
+        className={`pointer-events-none absolute bottom-5 right-5 z-30 h-32 w-24 overflow-hidden rounded-2xl border border-white/20 bg-black shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] ${
+          stage === "playing" ? "" : "hidden"
+        }`}
+      >
+        <video
+          ref={videoRef}
+          playsInline
+          muted
+          className="size-full scale-x-[-1] object-cover"
+        />
+      </div>
 
       {stage === "ready" && (
         <ReadyOverlay
