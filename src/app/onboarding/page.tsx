@@ -152,7 +152,14 @@ function LanguagePicker({ onContinue }: { onContinue: () => void }) {
 
   return (
     <div className="flex h-full flex-col justify-between bg-black p-6">
-      <div className="pt-[12dvh]">
+      {/* pt-28 고정값 — dvh는 이 프레임 안에서 진짜 브라우저 뷰포트를
+          기준으로 계산된다. 실기기(폭 <768)에선 뷰포트 높이가 곧 이
+          프레임 높이라 문제없지만, PC 웹(md+)에서는 이 화면이 874px
+          고정 프레임 안에 축소돼 들어가 있는데 dvh는 그 축소 사실을
+          모르고 브라우저 창의 실제 높이로 계산돼 버린다. 창이 프레임보다
+          훨씬 크면 콘텐츠가 화면 아래로 훅 밀려난다 — 지금 이 버그.
+          874px 프레임 기준 12%(~105px)에 맞춘 고정값으로 대체한다. */}
+      <div className="pt-28">
         <p className="type-eyebrow text-[12px] font-medium uppercase text-primary">
           {t("onboarding.language.eyebrow")}
         </p>
