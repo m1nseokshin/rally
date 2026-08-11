@@ -66,8 +66,17 @@ export function useMotionCamera({
         );
       }
 
+      // facingMode: "user" — 전면 카메라여야 한다. 이 화면은 처음부터
+      // 셀피 전제로 짜여 있다: 안내문이 "카메라가 상체를 비추도록 기기를
+      // 세워두세요"이고, 미리보기는 scale-x-[-1]로 거울처럼 뒤집어 보여주며,
+      // HandPose.x도 x = 1 - cx로 같이 뒤집는다. 그런데 여기서만 후면
+      // ("environment") 카메라를 켜고 있었다. 후면 영상은 애초에 거울상이
+      // 아니라서 저 뒤집기가 보정이 아니라 오히려 좌우를 반전시킨다 —
+      // 손을 오른쪽으로 옮기면 라켓이 왼쪽으로 가던 게 이 때문이다.
+      // (데스크톱엔 후면 카메라가 없어 브라우저가 웹캠으로 폴백하는 바람에
+      //  이 화면에선 멀쩡해 보였고, 실기기에서만 드러났다.)
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1280 } },
+        video: { facingMode: "user", width: { ideal: 1280 } },
         audio: false,
       });
       streamRef.current = stream;
@@ -115,7 +124,7 @@ export function useMotionCamera({
             lastSwingRef.current = now;
             onSwingRef.current?.({
               intensity: Math.min(1, ratio / (threshold * 3)),
-              // 배경 <video>가 scale-x-[-1]로 뒤집혀 보이므로 여기서도 뒤집어
+              // 미리보기 <video>가 scale-x-[-1]로 뒤집혀 보이므로 여기서도 뒤집어
               // HandPose.x(이미 1-cx로 미러링됨)와 좌표계를 맞춘다 —
               // 안 맞추면 두 스윙 소스가 서로 반대편을 가리킨다.
               x: changed > 0 ? 1 - weightedX / changed : 0.5,

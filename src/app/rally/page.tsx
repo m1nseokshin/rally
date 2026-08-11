@@ -339,10 +339,20 @@ function RallyGame() {
           숫자 z-index 없인 뒤로 깔린다).
           ready/done 화면엔 자체 전체화면 오버레이(안내문·결과)가 이미
           바닥까지 차 있어서, 우측 하단 CTA 버튼과 겹친다 — 실제 랠리가
-          진행되는 playing 단계에서만 띄운다. */}
+          진행되는 playing 단계에서만 보이게 한다.
+          단 숨길 때 display:none(hidden)은 쓰면 안 된다 — startGame이
+          stage를 "playing"으로 올리기 전에 startCamera()부터 부르는데,
+          그 시점에 video가 display:none이면 브라우저가 디코딩을 멈추거나
+          (iOS는 아예) play()가 진행되지 않아 손 추적이 굶는다. 눈에만 안
+          보이면 되니 opacity로 숨긴다(이미 pointer-events-none이라
+          아래 CTA 버튼을 가리지도 않는다). */}
       <div
-        className={`pointer-events-none absolute bottom-5 right-5 z-30 h-32 w-24 overflow-hidden rounded-2xl border border-white/20 bg-black shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] ${
-          stage === "playing" ? "" : "hidden"
+        // 가로 박스 — 카메라 원본이 가로(1280 ideal)라 세로 박스에
+        // object-cover로 넣으면 좌우가 크게 잘려 나간다. 정작 좌우로 손을
+        // 움직이는 게임인데 미리보기에선 손이 프레임 밖으로 나가버려서,
+        // 추적은 되는데 안 되는 것처럼 보였다. 원본 비율에 맞춰 가로로 둔다.
+        className={`pointer-events-none absolute bottom-5 right-5 z-30 h-24 w-32 overflow-hidden rounded-2xl border border-white/20 bg-black shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] transition-opacity duration-300 ${
+          stage === "playing" ? "opacity-100" : "opacity-0"
         }`}
       >
         <video
