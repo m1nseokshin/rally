@@ -170,6 +170,11 @@ function RallyGame() {
     send: sendToRemote,
   } = usePeerHost(useRemote, handleSwing);
   const remoteConnected = remoteStatus === "connected";
+  /**
+   * 카메라 스트림이 아예 없는 상태 — 폰으로 조작 중이라 켤 일이 없거나,
+   * 켜려다 실패했거나. 둘 다 미리보기에 비출 게 없어서 빈 검은 상자만 남는다.
+   */
+  const cameraUnused = remoteConnected || cameraError !== null;
 
   // 손이 인식되면(주먹이든 편 손바닥이든) 라켓이 그 위치를 따라가고,
   // 휘두르는 제스처가 나오면 handleSwing이 호출된다.
@@ -398,21 +403,23 @@ function RallyGame() {
           ready/done 화면엔 자체 전체화면 오버레이(안내문·결과)가 이미
           바닥까지 차 있어서, 우측 하단 CTA 버튼과 겹친다 — 실제 랠리가
           진행되는 playing 단계에서만 보이게 한다.
-          단 숨길 때 display:none(hidden)은 쓰면 안 된다 — startGame이
-          stage를 "playing"으로 올리기 전에 startCamera()부터 부르는데,
-          그 시점에 video가 display:none이면 브라우저가 디코딩을 멈추거나
-          (iOS는 아예) play()가 진행되지 않아 손 추적이 굶는다. 눈에만 안
-          보이면 되니 opacity로 숨긴다(이미 pointer-events-none이라
-          아래 CTA 버튼을 가리지도 않는다). */}
+          숨기는 방법이 두 가지인데 이유가 다르다.
+          · 스트림이 있는데 아직 playing이 아닐 때는 opacity로만 숨긴다.
+            startGame이 stage를 "playing"으로 올리기 전에 startCamera()부터
+            부르는데, 그 시점에 video가 display:none이면 브라우저가 디코딩을
+            멈추거나(iOS는 아예) play()가 진행되지 않아 손 추적이 굶는다.
+          · 반대로 카메라를 아예 안 쓰는 경우(폰으로 조작 중이거나 카메라를
+            못 연 경우)는 스트림 자체가 없어서 굶을 디코딩도 없다. 이때는
+            빈 검은 상자만 남으므로 display:none으로 완전히 뺀다.
+          video 엘리먼트는 어느 쪽이든 마운트된 채로 둔다 — 나중에 카메라로
+          돌아갈 때 startCamera()가 videoRef.current를 찾아야 한다. */}
       <div
         // 가로 박스 — 카메라 원본이 가로(1280 ideal)라 세로 박스에
         // object-cover로 넣으면 좌우가 크게 잘려 나간다. 정작 좌우로 손을
         // 움직이는 게임인데 미리보기에선 손이 프레임 밖으로 나가버려서,
         // 추적은 되는데 안 되는 것처럼 보였다. 원본 비율에 맞춰 가로로 둔다.
-        // 폰으로 조작 중이면 카메라를 아예 켜지 않으므로 빈 검은 상자만
-        // 남는다 — 그땐 자리도 차지하지 않게 완전히 뺀다.
         className={`pointer-events-none absolute bottom-5 right-5 z-30 h-24 w-32 overflow-hidden rounded-2xl border border-white/20 bg-black shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] transition-opacity duration-300 ${
-          stage === "playing" && !remoteConnected ? "opacity-100" : "opacity-0"
+          cameraUnused ? "hidden" : stage === "playing" ? "opacity-100" : "opacity-0"
         }`}
       >
         <video
