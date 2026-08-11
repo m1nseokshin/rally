@@ -126,20 +126,6 @@ function Article({ product }: { product: Product }) {
         </div>
       </div>
 
-      {/* 스펙 */}
-      <div className="grid grid-cols-3 gap-2 px-6 pt-5">
-        {product.specs.map((s) => (
-          <div
-            key={s.labelKey}
-            className="bg-cloud px-3 py-3"
-            style={{ borderRadius: "var(--radius-card)" }}
-          >
-            <p className="type-caption text-[11px] font-medium text-mute">{t(s.labelKey)}</p>
-            <p className="mt-1 text-[14px] font-semibold text-ink">{t(s.valueKey)}</p>
-          </div>
-        ))}
-      </div>
-
       {/* 본문 — 소제목 + 단락. 뉴스룸처럼 넉넉한 행간과 큰 소제목. */}
       <article className="stagger mt-8 space-y-9 px-6">
         {product.sections.map((s) => (
@@ -158,6 +144,25 @@ function Article({ product }: { product: Product }) {
           </section>
         ))}
       </article>
+
+      {/* 스펙 — 박스 카드 대신 줄마다 구분선으로 나눈 리스트. 설명을 다 읽은
+          다음에 오는 참고 자료라 본문 아래로 옮겼다. */}
+      <section className="mt-9 px-6">
+        <h2 className="type-display text-[24px] leading-[1.15] text-ink">
+          {t("product.specTitle")}
+        </h2>
+        <div className="mt-3 border-t border-hairline-soft">
+          {product.specs.map((s) => (
+            <div
+              key={s.labelKey}
+              className="flex items-center justify-between border-b border-hairline-soft py-3.5"
+            >
+              <p className="text-[13px] text-mute">{t(s.labelKey)}</p>
+              <p className="text-[14px] font-semibold text-ink">{t(s.valueKey)}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* 다른 제품 */}
       <section className="mt-12">
