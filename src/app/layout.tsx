@@ -98,7 +98,8 @@ export default function RootLayout({
         <Script id="theme-init" strategy="beforeInteractive">
           {THEME_INIT_SCRIPT}
         </Script>
-        <NoContextMenu />
+        {/* 잠시 꺼둠 — 요청 시 다시 켜기 */}
+        {/* <NoContextMenu /> */}
         {children}
       </body>
     </html>

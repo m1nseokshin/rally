@@ -18,6 +18,8 @@ import { createPlayer, isPlaybackSdkSupported, type RallyPlayer } from "@/lib/sp
 import { hasStreamingScope } from "@/lib/spotify/auth";
 import { IconBack, IconStop } from "@/components/icons";
 import RallyScene, { type RallySceneHandle } from "@/components/RallyScene";
+import PairingPanel from "@/components/PairingPanel";
+import { usePeerHost } from "@/lib/rally/remote/usePeerHost";
 import { useLocale } from "@/lib/i18n/useLocale";
 import { useSessionLog } from "@/lib/sessions/useSessionLog";
 
@@ -56,6 +58,12 @@ function RallyGame() {
   // HUD용 — 마지막 스윙 세기와 현재 그립. 초당 몇 번만 갱신돼 state로 둬도 무해하다.
   const [swingPower, setSwingPower] = useState(0);
   const [grip, setGrip] = useState(0);
+  /**
+   * 폰을 컨트롤러로 쓸 것인가. 켜야만 페어링 브로커에 접속한다 —
+   * 카메라로 하는 사람에게 불필요한 외부 연결을 열지 않는다.
+   */
+  const [useRemote, setUseRemote] = useState(false);
+  const [pairingOpen, setPairingOpen] = useState(false);
 
   const playerRef = useRef<RallyPlayer | null>(null);
   const spawnedRef = useRef(new Set<number>());
@@ -152,12 +160,30 @@ function RallyGame() {
     error: cameraError,
   } = useMotionCamera({ onSwing: onMotionSwing });
 
+  // 폰 컨트롤러 — 붙으면 카메라 대신 이쪽 입력을 쓴다. getPose가
+  // useHandTracking의 것과 시그니처·좌표계가 같아서 씬은 차이를 모른다.
+  const {
+    code: pairCode,
+    status: remoteStatus,
+    error: remoteError,
+    getPose: getRemotePose,
+    send: sendToRemote,
+  } = usePeerHost(useRemote, handleSwing);
+  const remoteConnected = remoteStatus === "connected";
+
   // 손이 인식되면(주먹이든 편 손바닥이든) 라켓이 그 위치를 따라가고,
   // 휘두르는 제스처가 나오면 handleSwing이 호출된다.
-  const { getPose: getHandPose } = useHandTracking(
+  // 폰이 붙어 있으면 아예 돌리지 않는다 — 두 입력이 동시에 라켓을 움직이면
+  // 서로 위치를 덮어써서 둘 다 안 맞는다.
+  const { getPose: getCameraPose } = useHandTracking(
     videoRef,
-    stage === "playing",
+    stage === "playing" && !remoteConnected,
     handleSwing,
+  );
+
+  const getHandPose = useCallback(
+    () => (remoteConnected ? getRemotePose() : getCameraPose()),
+    [remoteConnected, getRemotePose, getCameraPose],
   );
 
   const getElapsed = useCallback(() => beat.elapsed(), [beat]);
@@ -221,6 +247,36 @@ function RallyGame() {
     return () => clearInterval(id);
   }, [stage, getHandPose]);
 
+  // 아래 판정 전송 이펙트가 최신 점수를 읽을 수 있게 해둔다. 이 이펙트가
+  // flash 이펙트보다 먼저 선언돼야 같은 커밋에서 순서대로 돌아 값이 맞는다.
+  const scoreRef = useRef(0);
+  useEffect(() => {
+    scoreRef.current = score;
+  }, [score]);
+
+  // 붙는 순간 QR을 계속 띄워둘 이유가 없다 — 잠깐 "연결됨"을 보여주고
+  // 시작 화면으로 돌려보낸다.
+  useEffect(() => {
+    if (!remoteConnected || !pairingOpen) return;
+    const id = setTimeout(() => setPairingOpen(false), 900);
+    return () => clearTimeout(id);
+  }, [remoteConnected, pairingOpen]);
+
+  /** 폰 화면에도 진행 상태를 비춰준다 — 폰은 손에 들려 있어 화면을 못 볼 때가 많다 */
+  useEffect(() => {
+    if (remoteConnected) sendToRemote({ t: "stage", stage });
+  }, [stage, remoteConnected, sendToRemote]);
+
+  useEffect(() => {
+    if (!flash || !remoteConnected) return;
+    // smash는 폰 쪽에 따로 구분해 보낼 게 없다 — 진동/색은 perfect와 같다
+    sendToRemote({
+      t: "judge",
+      result: flash === "smash" ? "perfect" : flash,
+      score: scoreRef.current,
+    });
+  }, [flash, remoteConnected, sendToRemote]);
+
   /** 스윙 파워 게이지는 서서히 내려간다 */
   useEffect(() => {
     if (swingPower === 0) return;
@@ -233,8 +289,10 @@ function RallyGame() {
     // 다른 await(카메라 등)보다 반드시 먼저 호출한다.
     await requestOrientation();
 
+    // 폰 컨트롤러가 붙어 있으면 카메라를 아예 켜지 않는다 — 손 추적도
+    // 모션 폴백도 쓰지 않으므로, 권한 창만 띄우고 전력을 쓰는 셈이 된다.
     // 방향을 강제하지 않는다 — 폰은 세로, PC는 가로 뷰포트 그대로 쓴다.
-    await startCamera();
+    if (!remoteConnected) await startCamera();
 
     // Spotify 실제 재생 시도 — Premium이 아니거나 재생 권한이 없으면 비트 사운드로 폴백
     let sync: { atMs: number; positionSec: number } | undefined;
@@ -269,7 +327,7 @@ function RallyGame() {
     savedRef.current = false;
     await beat.start(sync);
     setStage("playing");
-  }, [startCamera, beat, trackId, requestOrientation, t]);
+  }, [startCamera, beat, trackId, requestOrientation, t, remoteConnected]);
 
   const finish = useCallback(() => {
     beat.stop();
@@ -351,8 +409,10 @@ function RallyGame() {
         // object-cover로 넣으면 좌우가 크게 잘려 나간다. 정작 좌우로 손을
         // 움직이는 게임인데 미리보기에선 손이 프레임 밖으로 나가버려서,
         // 추적은 되는데 안 되는 것처럼 보였다. 원본 비율에 맞춰 가로로 둔다.
+        // 폰으로 조작 중이면 카메라를 아예 켜지 않으므로 빈 검은 상자만
+        // 남는다 — 그땐 자리도 차지하지 않게 완전히 뺀다.
         className={`pointer-events-none absolute bottom-5 right-5 z-30 h-24 w-32 overflow-hidden rounded-2xl border border-white/20 bg-black shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] transition-opacity duration-300 ${
-          stage === "playing" ? "opacity-100" : "opacity-0"
+          stage === "playing" && !remoteConnected ? "opacity-100" : "opacity-0"
         }`}
       >
         <video
@@ -369,8 +429,28 @@ function RallyGame() {
           artist={artist}
           bpm={bpm}
           error={cameraError}
+          remoteConnected={remoteConnected}
           onStart={startGame}
           onBack={() => router.back()}
+          onPair={() => {
+            setUseRemote(true);
+            setPairingOpen(true);
+          }}
+        />
+      )}
+
+      {/* 페어링은 ready 위에 겹치는 오버레이다 — 별도 stage로 만들면 뒤로
+          가기·시작 흐름이 갈라지는데, 실제로는 "시작 전 준비" 안에서
+          입력 장치만 고르는 일이라 단계로 나눌 만한 게 아니다. */}
+      {pairingOpen && stage === "ready" && (
+        <PairingPanel
+          code={pairCode}
+          status={remoteStatus}
+          error={remoteError}
+          onUseCamera={() => {
+            setPairingOpen(false);
+            setUseRemote(false);
+          }}
         />
       )}
 
@@ -515,15 +595,19 @@ function ReadyOverlay({
   artist,
   bpm,
   error,
+  remoteConnected,
   onStart,
   onBack,
+  onPair,
 }: {
   title: string;
   artist: string;
   bpm: number;
   error: string | null;
+  remoteConnected: boolean;
   onStart: () => void;
   onBack: () => void;
+  onPair: () => void;
 }) {
   const { t } = useLocale();
   return (
@@ -544,12 +628,25 @@ function ReadyOverlay({
         <h1 className="type-display mt-2 text-[40px] leading-[0.9] text-white">{title}</h1>
         {artist && <p className="mt-2 text-[13px] text-white/60">{artist}</p>}
 
+        {/* 폰으로 조작 중이면 카메라 안내는 통째로 무의미하다 —
+            폰을 어떻게 쥐고 휘두르는지로 바꿔 준다. */}
         <ul className="type-caption mt-5 space-y-1.5 text-[12px] text-white/70">
-          <li>· {t("rally.ready.instructions.camera")}</li>
-          <li>· {t("rally.ready.instructions.hand")}</li>
-          <li>· {t("rally.ready.instructions.reach")}</li>
-          <li>· {t("rally.ready.instructions.hit")}</li>
-          <li>· {t("rally.ready.instructions.strong")}</li>
+          {remoteConnected ? (
+            <>
+              <li>· {t("rally.ready.instructions.phoneHold")}</li>
+              <li>· {t("rally.ready.instructions.phoneTilt")}</li>
+              <li>· {t("rally.ready.instructions.phoneSwing")}</li>
+              <li>· {t("rally.ready.instructions.strong")}</li>
+            </>
+          ) : (
+            <>
+              <li>· {t("rally.ready.instructions.camera")}</li>
+              <li>· {t("rally.ready.instructions.hand")}</li>
+              <li>· {t("rally.ready.instructions.reach")}</li>
+              <li>· {t("rally.ready.instructions.hit")}</li>
+              <li>· {t("rally.ready.instructions.strong")}</li>
+            </>
+          )}
         </ul>
 
         {error && (
@@ -566,8 +663,27 @@ function ReadyOverlay({
           onClick={onStart}
           className="tap mt-6 h-14 w-full rounded-lg bg-primary text-[16px] font-semibold text-white"
         >
-          {error ? t("rally.ready.retry") : t("rally.ready.start")}
+          {remoteConnected
+            ? t("rally.ready.startWithPhone")
+            : error
+              ? t("rally.ready.retry")
+              : t("rally.ready.start")}
         </button>
+
+        {remoteConnected ? (
+          <p className="type-caption mt-3 flex items-center justify-center gap-2 text-[12px] text-white/60">
+            <span className="size-1.5 rounded-full bg-success-bright" />
+            {t("rally.pair.connected")}
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={onPair}
+            className="tap type-caption mt-3 h-10 w-full text-[13px] font-medium text-white/70 underline underline-offset-4"
+          >
+            {t("rally.pair.cta")}
+          </button>
+        )}
       </div>
     </div>
   );
